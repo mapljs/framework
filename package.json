@@ -1,0 +1,29 @@
+{
+  "name": "app-new",
+  "version": "0.0.1",
+  "description": "",
+  "keywords": [],
+  "license": "MIT",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "scripts": {
+    "task": "bun scripts/task.ts",
+    "build:test": "bun task build && bun test",
+    "build:publish": "bun task build && bun task report-size && bun task publish",
+    "lint": "eslint ./src",
+    "lint:fix": "eslint ./src --fix"
+  },
+  "devDependencies": {
+    "@stylistic/eslint-plugin": "latest",
+    "@types/bun": "latest",
+    "@types/uglify-js": "latest",
+    "eslint": "latest",
+    "eslint-plugin-jsdoc": "latest",
+    "mitata": "latest",
+    "terser": "^5.39.0",
+    "tsx": "latest",
+    "typescript": "latest",
+    "typescript-eslint": "latest"
+  }
+}
