@@ -1,5 +1,5 @@
 {
-  "name": "app-new",
+  "name": "@mapl/app",
   "version": "0.0.1",
   "description": "",
   "keywords": [],
@@ -17,7 +17,6 @@
   "devDependencies": {
     "@stylistic/eslint-plugin": "latest",
     "@types/bun": "latest",
-    "@types/uglify-js": "latest",
     "eslint": "latest",
     "eslint-plugin-jsdoc": "latest",
     "mitata": "latest",
@@ -25,5 +24,9 @@
     "tsx": "latest",
     "typescript": "latest",
     "typescript-eslint": "latest"
+  },
+  "dependencies": {
+    "@mapl/router": "^0.4.6",
+    "stnl": "^0.3.5"
   }
 }
