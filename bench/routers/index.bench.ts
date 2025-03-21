@@ -33,7 +33,16 @@ const analyzeRoute = (route: [method: string, path: string], i: number) => {
   };
 }
 
-function loadTest(label: string, routes: [method: string, path: string][], invalidRoutes: [method: string, path: string][]) {
+const shuffleArray = (array: any[]) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+
+  return array;
+}
+
+const loadTest = (label: string, routes: [method: string, path: string][], invalidRoutes: [method: string, path: string][]) => {
   const testRoutes = routes.map(analyzeRoute);
   const invalidTestRoutes = invalidRoutes.map(analyzeRoute);
 
@@ -80,12 +89,16 @@ function loadTest(label: string, routes: [method: string, path: string][], inval
       }
 
       bench(`(${label}) ${router.name}`, function* () {
+        let arr = testRoutes.concat(invalidTestRoutes);
+        arr = [...arr, ...arr, ...arr, ...arr, ...arr];
+
         yield {
           [0]() {
-            return testRoutes.concat(invalidTestRoutes).map((x) => x.method);
+            shuffleArray(arr);
+            return arr.map((x) => x.method);
           },
           [1]() {
-            return testRoutes.concat(invalidTestRoutes).map((x) => x.path);
+            return arr.map((x) => x.path);
           },
           bench(methods: string[], paths: string[]) {
             for (let i = 0; i < methods.length; i++)
