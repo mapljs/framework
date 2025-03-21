@@ -1,1 +1,1 @@
-A compiled web framework.
+A compiler framework for web frameworks.
