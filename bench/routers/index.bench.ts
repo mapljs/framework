@@ -70,8 +70,8 @@ function loadTest(label: string, routes: [method: string, path: string][], inval
           }
 
           console.info('Test', test, 'failed with result:', result);
-        } catch {
-          console.info('Test', test, 'throws');
+        } catch (e) {
+          console.info('Test', test, 'throws', e);
         }
 
         // Register next router

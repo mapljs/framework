@@ -18,13 +18,13 @@ const init = (name: string, C: { new(): Router<IHandler> }): IRouter => ({
       return (method, path) => {
         const res = router.match(method, path);
 
-        if (res[0].length !== 0) {
+        if (res[0].length > 0) {
           // Need to get values of params
           const params = [];
           for (let i = 1, stash = res[1]!; i < stash.length; i++)
             if (stash[i])
               params.push(stash[i]);
-          return [res[0][0], params];
+          return [res[0][0][0], params];
         }
       }
 
