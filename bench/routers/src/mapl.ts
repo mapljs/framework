@@ -31,6 +31,6 @@ export const compiled: IRouter = {
       )
     }
 
-    return Function(...deps, `return (method,${PATH})=>{${compile(router, o2, 'method', '', 0)}}`)(...values);
+    return Function(...deps, `return (_,${PATH})=>{${compile(router, o2, '_', '', 0)}}`)(...values);
   }
 }
