@@ -5,6 +5,8 @@ import { resolve, join } from 'node:path/posix';
 import { transpileDeclaration } from 'typescript';
 import tsconfig from '../tsconfig.json';
 
+import * as constants from '../src/constants';
+
 // Constants
 const ROOTDIR = resolve(import.meta.dir, '..');
 const SOURCEDIR = `${ROOTDIR}/src`;
@@ -15,12 +17,16 @@ if (existsSync(OUTDIR)) rmSync(OUTDIR, { recursive: true });
 
 // Transpile files concurrently
 const transpiler = new Bun.Transpiler({
-  loader: 'tsx',
+  loader: 'ts',
   target: 'node',
 
-  // Lighter output
+  // Lighter and more optimized output
+  treeShaking: true,
   minifyWhitespace: true,
-  treeShaking: true
+  inline: true,
+
+  // Inline constants
+  define: Object.fromEntries(Object.entries(constants).map((entry) => [`constants.${entry[0]}`, JSON.stringify(entry[1])]))
 });
 
 for (const path of new Bun.Glob('**/*.ts').scanSync(SOURCEDIR)) {
