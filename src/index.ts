@@ -89,8 +89,8 @@ export type ContextInit<T = unknown> = (headers: [string, string][]) => T;
 
 export const createArgSet = (args: string[]): string[] => {
   const len = args.length;
-  const arr = new Array(len);
-  for (let i = 0; i < len; i++) arr[i] = args.slice(0, i).join();
+  const arr = new Array(len + 1);
+  for (let i = 1; i <= len; i++) arr[i] = args.slice(0, i).join();
   return arr;
 };
 
@@ -144,7 +144,7 @@ export const compileGroup = (
     let call = constants.DEP + dependencies.push(fn) + '(';
 
     if (fn.length > 0) {
-      call += argSet[Math.min(argSet.length, fn.length) - 1];
+      call += argSet[Math.min(argSet.length - 1, fn.length)];
       if (!contextCreated) {
         contextCreated = true;
         content += contextInit;
