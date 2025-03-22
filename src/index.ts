@@ -21,7 +21,7 @@ export type ErrorFunc = (err: Err, ...args: any[]) => any;
 /**
  * Describe an error handler
  */
-export type ErrorHandler<T extends ErrorFunc = ErrorFunc, Data extends any[] = any[]> = [handler: T, ...data: Data];
+export type ErrorHandler<T extends ErrorFunc = ErrorFunc, Data = unknown> = [handler: T, data: Data];
 
 /**
  * Describe a middleware
@@ -35,22 +35,22 @@ export type Middleware<T extends MiddlewareFunc> =
 /**
  * Describe a handler store
  */
-export type Handler<T extends Func = Func, Data extends any[] = any[]> = [method: Method, path: PathTransformResult, handler: T, ...data: Data];
+export type Handler<T extends Func = Func, Data = unknown> = [method: Method, path: PathTransformResult, handler: T, data: Data];
 
 /**
  * Describe a handler group
  */
-export type Group<E extends ErrorHandler = ErrorHandler, T extends Func = Func, Data extends any[] = []> = [
+export type Group<E extends ErrorFunc = ErrorFunc, T extends Func = Func, Data = unknown> = [
   middlewares: Middleware<T>[],
   handlers: Handler<T, Data>[],
-  errHandler: E | null,
+  errHandler: ErrorHandler<ErrorFunc, Data> | null,
   children: ChildGroup<E, T, Data>[]
 ];
 
 /**
  * Describe a handler child group data
  */
-export type ChildGroup<E extends ErrorHandler, T extends Func, Data extends any[] = []> = [
+export type ChildGroup<E extends ErrorFunc, T extends Func, Data = unknown> = [
   prefix: string,
   group: Group<E, T, Data>
 ];
