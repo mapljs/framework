@@ -39,15 +39,15 @@ export type Group<E extends ErrorFunc = ErrorFunc, T extends Func = Func, Data e
   middlewares: Middleware<T>[],
   handlers: Handler<T, Data>[],
   errHandler: E | null,
-  children: ChildGroup<E, T>[]
+  children: ChildGroup<E, T, Data>[]
 ];
 
 /**
  * Describe a handler child group data
  */
-export type ChildGroup<E extends ErrorFunc, T extends Func> = [
+export type ChildGroup<E extends ErrorFunc, T extends Func, Data extends any[] = []> = [
   prefix: string,
-  group: Group<E, T>
+  group: Group<E, T, Data>
 ];
 
 /**
