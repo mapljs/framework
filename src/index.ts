@@ -19,6 +19,11 @@ export type Func = (...args: any[]) => any;
 export type ErrorFunc = (err: Err, ...args: any[]) => any;
 
 /**
+ * Describe an error handler
+ */
+export type ErrorHandler<T extends ErrorFunc = ErrorFunc, Data extends any[] = any[]> = [handler: T, ...data: Data];
+
+/**
  * Describe a middleware
  */
 export type Middleware<T extends MiddlewareFunc> =
@@ -30,12 +35,12 @@ export type Middleware<T extends MiddlewareFunc> =
 /**
  * Describe a handler store
  */
-export type Handler<T extends Func = Func, Data extends any[] = any[]> = [method: Method, path: PathTransformResult, handler: T, ...date: Data];
+export type Handler<T extends Func = Func, Data extends any[] = any[]> = [method: Method, path: PathTransformResult, handler: T, ...data: Data];
 
 /**
  * Describe a handler group
  */
-export type Group<E extends ErrorFunc = ErrorFunc, T extends Func = Func, Data extends any[] = []> = [
+export type Group<E extends ErrorHandler = ErrorHandler, T extends Func = Func, Data extends any[] = []> = [
   middlewares: Middleware<T>[],
   handlers: Handler<T, Data>[],
   errHandler: E | null,
@@ -45,7 +50,7 @@ export type Group<E extends ErrorFunc = ErrorFunc, T extends Func = Func, Data e
 /**
  * Describe a handler child group data
  */
-export type ChildGroup<E extends ErrorFunc, T extends Func, Data extends any[] = []> = [
+export type ChildGroup<E extends ErrorHandler, T extends Func, Data extends any[] = []> = [
   prefix: string,
   group: Group<E, T, Data>
 ];
@@ -69,7 +74,7 @@ export type Hook<T> = (
 /**
  * Hooks for compilation
  */
-export type CompilerHooks<E extends ErrorFunc = ErrorFunc, T extends Handler = Handler> = [
+export type CompilerHooks<E extends ErrorHandler = ErrorHandler, T extends Handler = Handler> = [
   compileHandler: Hook<T>,
   compileErrorHandler: Hook<E>
 ];
