@@ -77,7 +77,7 @@ export type Hook<T> = (
 /**
  * Hooks for compilation
  */
-export type CompilerHooks<E extends ErrorFunc = ErrorFunc, T extends Func = Func, Data> = [
+export type CompilerHooks<E extends ErrorFunc, T extends Func, Data> = [
   compileHandler: Hook<Handler<T, Data>>,
   compileErrorHandler: Hook<ErrorHandler<E, Data>>
 ];
@@ -98,7 +98,7 @@ export const createArgSet = (args: string[]): string[] => {
 const asyncConstructor = (async () => { }).constructor;
 
 // eslint-disable-next-line
-export const isFuncAsync: (fn: Func) => fn is (...args: any[]) => Promise<any> = globalThis.process?.getBuiltinModule('util/types').isAsyncFunction as any  ?? ((fn) => fn instanceof asyncConstructor);
+export const isFuncAsync: (fn: Func) => fn is (...args: any[]) => Promise<any> = globalThis.process?.getBuiltinModule?.('util/types').isAsyncFunction as any  ?? ((fn) => fn instanceof asyncConstructor);
 
 export const compileGroup = (
   group: Group,
