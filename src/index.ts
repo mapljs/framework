@@ -1,5 +1,6 @@
 import { type Router, type Method, insertItemWithParts } from '@mapl/router/method';
 import type { PathTransformResult } from '@mapl/router/transform';
+
 import { isErr, type Err } from 'safe-throw';
 
 /**
@@ -110,7 +111,8 @@ export const compileGroup = (
   scopeAsync: boolean,
   contextCreated: boolean,
 
-  compiledErrorHandler: string
+  compiledErrorHandler: string,
+  contextInit: string
 ): void => {
   // Compile error handler
   if (group[2] != null) {
@@ -135,7 +137,7 @@ export const compileGroup = (
       call += constants.CTX + ',' + argSet[Math.min(argSet.length, fn.length) - 1];
       if (!contextCreated) {
         contextCreated = true;
-        content += constants.CREATE_CTX;
+        content += contextInit;
       }
     }
 
@@ -210,20 +212,19 @@ export const compileGroup = (
       router,
       scopeAsync,
       contextCreated,
-      compiledErrorHandler
+      compiledErrorHandler,
+      contextInit
     );
   }
 };
 
-export const buildFunc = (body: string, dependencies: any[], initContext: ContextInit): Func =>
+export const buildFunc = (body: string, dependencies: any[]): Func =>
   // eslint-disable-next-line
   Function(
-    constants.CTX_FN,
     constants.IS_ERR,
     ...dependencies.map((_, i) => constants.DEP + (i + 1)),
     body
   )(
-    initContext,
     isErr,
     ...dependencies
   );
