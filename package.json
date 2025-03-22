@@ -1,6 +1,6 @@
 {
   "name": "@mapl/framework",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "A framework for building web frameworks",
   "keywords": [],
   "license": "MIT",

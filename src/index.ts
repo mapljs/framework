@@ -144,7 +144,7 @@ export const compileGroup = (
     let call = constants.DEP + dependencies.push(fn) + '(';
 
     if (fn.length > 0) {
-      call += constants.CTX + ',' + argSet[Math.min(argSet.length, fn.length) - 1];
+      call += argSet[Math.min(argSet.length, fn.length) - 1];
       if (!contextCreated) {
         contextCreated = true;
         content += contextInit;
