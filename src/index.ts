@@ -74,9 +74,9 @@ export type Hook<T> = (
 /**
  * Hooks for compilation
  */
-export type CompilerHooks<E extends ErrorFunc = ErrorFunc, T extends Func = Func> = [
-  compileHandler: Hook<Handler<T>>,
-  compileErrorHandler: Hook<ErrorHandler<E>>
+export type CompilerHooks<E extends ErrorFunc = ErrorFunc, T extends Func = Func, Data> = [
+  compileHandler: Hook<Handler<T, Data>>,
+  compileErrorHandler: Hook<ErrorHandler<E, Data>>
 ];
 
 /**
