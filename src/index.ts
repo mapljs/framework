@@ -68,7 +68,10 @@ export type Hook<T> = (
   argSet: string[],
 
   scopeAsync: boolean,
-  contextCreated: boolean
+  contextCreated: boolean,
+
+  compiledErrorHandler: string,
+  contextInit: string
 ) => string;
 
 /**
@@ -101,7 +104,7 @@ export const compileGroup = (
   group: Group,
 
   prefix: string,
-  hooks: CompilerHooks,
+  hooks: CompilerHooks<any, any, any>,
 
   // Previously built content
   content: string,
@@ -126,7 +129,9 @@ export const compileGroup = (
       dependencies,
       argSet,
       scopeAsync,
-      contextCreated
+      contextCreated,
+      compiledErrorHandler,
+      contextInit
     );
   }
 
@@ -197,7 +202,9 @@ export const compileGroup = (
         dependencies,
         argSet,
         scopeAsync,
-        contextCreated
+        contextCreated,
+        compiledErrorHandler,
+        contextInit
       ) + (scopeAsync ? constants.ASYNC_END : '')
     );
   }
