@@ -1,7 +1,14 @@
+export * from '@mapl/router/constants';
+
 export const MAPL = 'm';
 
 // Required dependencies
 export const IS_ERR: string = MAPL + 'ie';
+
+/**
+ * Store errors
+ */
+export const ERR: string = MAPL + 'e';
 
 /**
  * Request headers

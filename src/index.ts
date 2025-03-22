@@ -168,13 +168,13 @@ export const compileGroup = (
         content += call;
         break;
       case 1:
-        content += 'if(' + constants.IS_ERR + '(' + call + ')){' + compiledErrorHandler + '}';
+        content += 'let ' + constants.ERR + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.ERR + ')){' + compiledErrorHandler + '}';
         break;
       case 2:
         content += constants.CTX + '.' + middleware[2] + '=' + call;
         break;
       case 3:
-        content += 'if(' + constants.IS_ERR + '(' + constants.CTX + '.' + middleware[2] + '=' + call + ')){' + compiledErrorHandler + '}';
+        content += 'let ' + constants.ERR + '=' + constants.CTX + '.' + middleware[2] + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.ERR + ')){' + compiledErrorHandler + '}';
         break;
     }
   }
