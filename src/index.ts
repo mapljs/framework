@@ -99,7 +99,7 @@ export const selectArgs = (argSet: string[], count: number): string => argSet[Ma
 
 export const concatPrefix = (prefix: string, path: string): string => {
   path = prefix + path;
-  return (/.+\//).test(path) ? prefix : path;
+  return (/.\/$/).test(path) ? prefix : path;
 };
 
 // Detect async functions
