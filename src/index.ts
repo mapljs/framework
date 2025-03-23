@@ -60,24 +60,24 @@ export type ChildGroup<E extends ErrorFunc, T extends Func, Data = unknown> = [
  */
 export type Hook<T> = (
   data: T,
-
-  // Injected dependencies
-  dependencies: any[],
-
-  // Argument set should include context
-  argSet: string[],
+  state: CompilerState<any, any, any>,
 
   scopeAsync: boolean,
   contextCreated: boolean,
 
   compiledErrorHandler: string,
-  contextInit: string
 ) => string;
 
 /**
- * Hooks for compilation
+ * State for compilation
  */
-export type CompilerHooks<E extends ErrorFunc, T extends Func, Data> = [
+export type CompilerState<E extends ErrorFunc, T extends Func, Data> = [
+  router: Router<string>,
+
+  dependencies: any[],
+  argSet: string[],
+  contextInit: string,
+
   compileHandler: Hook<Handler<T, Data>>,
   compileErrorHandler: Hook<ErrorHandler<E, Data>>
 ];
@@ -102,55 +102,43 @@ export const isFuncAsync: (fn: Func) => fn is (...args: any[]) => Promise<any> =
 
 export const compileGroup = (
   group: Group,
+  state: CompilerState<any, any, any>,
 
   prefix: string,
-  hooks: CompilerHooks<any, any, any>,
 
   // Previously built content
   content: string,
 
-  // Injected dependencies
-  dependencies: any[],
-
-  // Argument set should include context
-  argSet: string[],
-  router: Router<string>,
-
   scopeAsync: boolean,
   contextCreated: boolean,
 
-  compiledErrorHandler: string,
-  contextInit: string
+  compiledErrorHandler: string
 ): void => {
   // Compile error handler
   if (group[2] != null) {
-    compiledErrorHandler = hooks[1](
+    compiledErrorHandler = state[5](
       group[2],
-      dependencies,
-      argSet,
+      state,
       scopeAsync,
       contextCreated,
-      compiledErrorHandler,
-      contextInit
+      compiledErrorHandler
     );
   }
 
   // Compile middlewares
-  for (let i = 0, middlewares = group[0]; i < middlewares.length; i++) {
+  for (let i = 0, middlewares = group[0], argSet = state[2]; i < middlewares.length; i++) {
     const middleware = middlewares[i];
     const fn = middleware[1];
 
-    // Analyze the function
-    let call = constants.DEP + dependencies.push(fn) + '(';
-
+    // Analyze function args
+    let call = constants.DEP + state[1].push(fn) + '(';
     if (fn.length > 0) {
       call += argSet[Math.min(argSet.length - 1, fn.length)];
       if (!contextCreated) {
         contextCreated = true;
-        content += contextInit;
+        content += state[3];
       }
     }
-
     call += ');';
 
     if (isFuncAsync(fn)) {
@@ -189,7 +177,7 @@ export const compileGroup = (
       parts[0] = prefix;
 
     insertItemWithParts(
-      router,
+      state[0],
 
       // Analyzed path and method
       handler[0],
@@ -197,14 +185,12 @@ export const compileGroup = (
       handler[1][2],
 
       // Correctly wrap async end
-      content + hooks[0](
+      content + state[4](
         handler,
-        dependencies,
-        argSet,
+        state,
         scopeAsync,
         contextCreated,
-        compiledErrorHandler,
-        contextInit
+        compiledErrorHandler
       ) + (scopeAsync ? constants.ASYNC_END : '')
     );
   }
@@ -214,18 +200,14 @@ export const compileGroup = (
 
     compileGroup(
       childGroup[1],
+      state,
       // Prefix should never ends with '/'
       childGroup[0] === '/' ? prefix : prefix + childGroup[0],
 
-      hooks,
       content,
-      dependencies,
-      argSet,
-      router,
       scopeAsync,
       contextCreated,
-      compiledErrorHandler,
-      contextInit
+      compiledErrorHandler
     );
   }
 };
