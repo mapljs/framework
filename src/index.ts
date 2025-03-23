@@ -94,6 +94,13 @@ export const createArgSet = (args: string[]): string[] => {
   return arr;
 };
 
+export const selectArgs = (argSet: string[], count: number): string => argSet[Math.min(argSet.length - 1, count)]
+
+export const concatPrefix = (prefix: string, path: string): string => {
+  path = prefix + path;
+  return (/.+\//).test(path) ? prefix : path;
+}
+
 // Detect async functions
 const asyncConstructor = (async () => { }).constructor;
 
@@ -126,14 +133,14 @@ export const compileGroup = (
   }
 
   // Compile middlewares
-  for (let i = 0, middlewares = group[0], argSet = state[2]; i < middlewares.length; i++) {
+  for (let i = 0, middlewares = group[0]; i < middlewares.length; i++) {
     const middleware = middlewares[i];
     const fn = middleware[1];
 
     // Analyze function args
     let call = constants.DEP + state[1].push(fn) + '(';
     if (fn.length > 0) {
-      call += argSet[Math.min(argSet.length - 1, fn.length)];
+      call += selectArgs(state[2], fn.length);
       if (!contextCreated) {
         contextCreated = true;
         content += state[3];
@@ -172,9 +179,8 @@ export const compileGroup = (
     const handler = handlers[i];
 
     // Add prefix (prefix is always static)
-    const parts = handler[1][1];
-    if ((/.+\//).test(parts[0] = prefix + parts[0]))
-      parts[0] = prefix;
+    let parts = handler[1][1];
+    parts = parts.with(0, concatPrefix(prefix, parts[0]));
 
     insertItemWithParts(
       state[0],
