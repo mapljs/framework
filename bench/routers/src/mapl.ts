@@ -17,7 +17,7 @@ export const compiled: IRouter = {
     const values: IHandler[] = [];
 
     for (const route of routes) {
-      const [params, parts, flag] = transformRoute(route.path);
+      const result = transformRoute(route.path);
 
       // Bind the function name and return in the result
       const name = 'f' + (values.push(route.item) - 1);
@@ -26,8 +26,8 @@ export const compiled: IRouter = {
       // Insert the return statement
       insertItemWithParts(
         router,
-        route.method, parts, flag,
-        `return[${name},[${params.map((_, i) => PARAMS + i).join()}]];`
+        route.method, result,
+        `return[${name},[${result[0].map((_, i) => PARAMS + i).join()}]];`
       )
     }
 

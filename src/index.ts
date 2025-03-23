@@ -1,6 +1,5 @@
 import { type Router, type Method, insertItemWithParts } from '@mapl/router/method';
-import type { PathTransformResult } from '@mapl/router/transform';
-
+import type { PathTransformer } from '@mapl/router/transform';
 import { isErr, type Err } from 'safe-throw';
 
 /**
@@ -35,7 +34,7 @@ export type Middleware<T extends MiddlewareFunc> =
 /**
  * Describe a handler store
  */
-export type Handler<T extends Func = Func, Data = unknown> = [method: Method, path: PathTransformResult, handler: T, data: Data];
+export type Handler<T extends Func = Func, Data = unknown> = [method: Method, path: string, handler: T, data: Data];
 
 /**
  * Describe a handler group
@@ -79,7 +78,9 @@ export type CompilerState<E extends ErrorFunc, T extends Func, Data> = [
   contextInit: string,
 
   compileHandler: Hook<Handler<T, Data>>,
-  compileErrorHandler: Hook<ErrorHandler<E, Data>>
+  compileErrorHandler: Hook<ErrorHandler<E, Data>>,
+
+  pathTransformer: PathTransformer
 ];
 
 /**
@@ -94,12 +95,12 @@ export const createArgSet = (args: string[]): string[] => {
   return arr;
 };
 
-export const selectArgs = (argSet: string[], count: number): string => argSet[Math.min(argSet.length - 1, count)]
+export const selectArgs = (argSet: string[], count: number): string => argSet[Math.min(argSet.length - 1, count)];
 
 export const concatPrefix = (prefix: string, path: string): string => {
   path = prefix + path;
   return (/.+\//).test(path) ? prefix : path;
-}
+};
 
 // Detect async functions
 const asyncConstructor = (async () => { }).constructor;
@@ -178,17 +179,12 @@ export const compileGroup = (
   for (let i = 0, handlers = group[1]; i < handlers.length; i++) {
     const handler = handlers[i];
 
-    // Add prefix (prefix is always static)
-    let parts = handler[1][1];
-    parts = parts.with(0, concatPrefix(prefix, parts[0]));
-
     insertItemWithParts(
       state[0],
 
-      // Analyzed path and method
+      // Method and analyze path
       handler[0],
-      parts,
-      handler[1][2],
+      state[6](concatPrefix(prefix, handler[1])),
 
       // Correctly wrap async end
       content + state[4](
