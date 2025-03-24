@@ -79,8 +79,15 @@ export type CompilerState<E extends ErrorFunc, T extends Func, Data> = [
   argSet: string[],
   contextInit: string,
 
-  compileHandler: Hook<[Handler<T, Data>, PathTransformResult]>,
-  compileErrorHandler: Hook<[ErrorHandler<E, Data>]>,
+  compileHandler: Hook<[
+    handler: Handler<T, Data>[2],
+    data: Handler<T, Data>[3],
+    path: PathTransformResult
+  ]>,
+  compileErrorHandler: Hook<[
+    handler: ErrorHandler<E, Data>[0],
+    data: ErrorHandler<E, Data>[1]
+  ]>,
 
   pathTransformer: PathTransformer
 ];
@@ -127,7 +134,8 @@ export const compileGroup = (
   // Compile error handler
   if (group[2] != null) {
     compiledErrorHandler = state[5](
-      group[2],
+      group[2][0],
+      group[2][1],
       state,
       scopeAsync,
       contextCreated,
@@ -191,9 +199,12 @@ export const compileGroup = (
 
       // Correctly wrap async end
       content + state[4](
-        handler,
+        handler[2],
+        handler[3],
         pathTransform,
+
         state,
+
         scopeAsync,
         contextCreated,
         compiledErrorHandler
