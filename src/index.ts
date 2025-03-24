@@ -1,6 +1,6 @@
 import { type Router, type Method, insertItemWithParts } from '@mapl/router/method';
-import type { PathTransformer } from '@mapl/router/transform';
-import { isErr, type Err } from 'safe-throw';
+import type { PathTransformer, PathTransformResult } from '@mapl/router/transform';
+import type { Err } from 'safe-throw';
 
 /**
  * Describe a middleware function
@@ -57,14 +57,16 @@ export type ChildGroup<E extends ErrorFunc, T extends Func, Data = unknown> = [
 /**
  * Describe a hook
  */
-export type Hook<T> = (
-  data: T,
-  state: CompilerState<any, any, any>,
+export type Hook<T extends any[]> = (
+  ...args: [
+    ...data: T,
+    state: CompilerState<any, any, any>,
 
-  scopeAsync: boolean,
-  contextCreated: boolean,
+    scopeAsync: boolean,
+    contextCreated: boolean,
 
-  compiledErrorHandler: string,
+    compiledErrorHandler: string
+  ]
 ) => string;
 
 /**
@@ -77,8 +79,8 @@ export type CompilerState<E extends ErrorFunc, T extends Func, Data> = [
   argSet: string[],
   contextInit: string,
 
-  compileHandler: Hook<Handler<T, Data>>,
-  compileErrorHandler: Hook<ErrorHandler<E, Data>>,
+  compileHandler: Hook<[Handler<T, Data>, PathTransformResult]>,
+  compileErrorHandler: Hook<[ErrorHandler<E, Data>]>,
 
   pathTransformer: PathTransformer
 ];
@@ -178,17 +180,19 @@ export const compileGroup = (
   // Register handlers
   for (let i = 0, handlers = group[1]; i < handlers.length; i++) {
     const handler = handlers[i];
+    const pathTransform = state[6](concatPrefix(prefix, handler[1]));
 
     insertItemWithParts(
       state[0],
 
       // Method and analyze path
       handler[0],
-      state[6](concatPrefix(prefix, handler[1])),
+      pathTransform,
 
       // Correctly wrap async end
       content + state[4](
         handler,
+        pathTransform,
         state,
         scopeAsync,
         contextCreated,
@@ -213,14 +217,3 @@ export const compileGroup = (
     );
   }
 };
-
-export const buildFunc = (body: string, dependencies: any[]): Func =>
-  // eslint-disable-next-line
-  Function(
-    constants.IS_ERR,
-    ...dependencies.map((_, i) => constants.DEP + (i + 1)),
-    body
-  )(
-    isErr,
-    ...dependencies
-  );
