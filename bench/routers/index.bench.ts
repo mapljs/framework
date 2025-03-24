@@ -48,13 +48,17 @@ const loadTest = (label: string, routes: [method: string, path: string][], inval
 
   summary(() => {
     registerRouter: for (const router of routers) {
-      const match = router.fn(
-        routes.map((route, i) => ({
-          method: route[0],
-          path: route[1],
-          item: () => i
-        }))
-      );
+      const resultRoutes = routes.map((route, i) => ({
+        method: route[0],
+        path: route[1],
+        item: () => i
+      }));
+
+      // Track build time
+      let t: number | bigint = process.hrtime.bigint();
+      const match = router.fn(resultRoutes);
+      t = Number((process.hrtime.bigint() - t) / 1000n) / 1000;
+      console.log(router.name, 'took', t.toFixed(2) + 'ms');
 
       // Validate registered routes
       for (const test of testRoutes) {
