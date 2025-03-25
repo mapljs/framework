@@ -6,9 +6,9 @@ export const MAPL = 'm';
 export const IS_ERR: string = MAPL + 'ie';
 
 /**
- * Store errors
+ * Store a temporary value
  */
-export const ERR: string = MAPL + 'e';
+export const TMP: string = MAPL + 't';
 
 /**
  * Request headers

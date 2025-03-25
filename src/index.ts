@@ -72,7 +72,6 @@ export type CompilerState = [
   router: Router<string>,
 
   dependencies: any[],
-  argSet: string[],
   contextInit: string,
 
   compileHandler: Hook<[
@@ -122,7 +121,7 @@ export const isFuncAsync: (fn: Func) => fn is (...args: any[]) => Promise<any> =
 
 export const compileGroup = (
   group: Group,
-  state: CompilerState,
+  compilerState: CompilerState,
   scope: ScopeState,
 
   // Path prefix
@@ -138,16 +137,17 @@ export const compileGroup = (
 
   // Compile middlewares
   for (let i = 0, middlewares = group[0]; i < middlewares.length; i++) {
-    const middleware = middlewares[i];
-    const fn = middleware[1];
+    const fn = middlewares[i][1];
 
     // Analyze function args
-    let call = constants.DEP + state[1].push(fn) + '(';
+    let call = constants.DEP + compilerState[1].push(fn) + '(';
     if (fn.length > 0) {
-      call += selectArgs(state[2], fn.length);
+      call += constants.CTX;
+
+      // Create the context when necessary
       if (!scope[1]) {
         scope[1] = true;
-        content += state[3];
+        content += compilerState[2];
 
         // Reset compiled error
         if (scope[2] !== null)
@@ -169,19 +169,19 @@ export const compileGroup = (
       call = 'await ' + call;
     }
 
-    const typ = middleware[0];
+    const typ = middlewares[i][0];
 
     // Modify to a statement that set the context (1 | 3)
     if ((typ & 1) === 1)
-      call = constants.CTX + '.' + middleware[2] + '=' + call;
+      call = constants.CTX + '.' + middlewares[i][2] + '=' + call;
 
     // Need validation (2 | 3)
     content += typ > 1
-      ? 'let ' + constants.ERR + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.ERR + ')){' + (
-        scope[3] ??= state[5](
+      ? 'let ' + constants.TMP + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.TMP + ')){' + (
+        scope[3] ??= compilerState[4](
           scope[2]![0],
           scope[2]![1],
-          state,
+          compilerState,
           scope
         )
       )
@@ -191,34 +191,34 @@ export const compileGroup = (
   // Register handlers
   for (let i = 0, handlers = group[1]; i < handlers.length; i++) {
     const handler = handlers[i];
-    const pathTransform = state[6](concatPrefix(prefix, handler[1]));
+    const pathTransform = compilerState[5](concatPrefix(prefix, handler[1]));
 
     insertItemWithParts(
-      state[0],
+      compilerState[0],
 
       // Method and analyze path
       handler[0],
       pathTransform,
 
       // Correctly wrap async end
-      content + state[4](
+      content + compilerState[3](
         handler[2],
         handler[3],
         pathTransform,
 
-        state,
+        compilerState,
         scope
       ) + (scope[0] ? constants.ASYNC_END : '')
     );
   }
 
   for (let i = 0, childGroups = group[3]; i < childGroups.length; i++) {
-    const childGroup = childGroups[i];
-
     compileGroup(
-      childGroup[1], state, [...scope],
-      // Prefix should never ends with '/'
-      childGroup[0] === '/' ? prefix : prefix + childGroup[0], content
+      childGroups[i][1],
+      compilerState,
+      [...scope],
+      childGroups[i][0] === '/' ? prefix : prefix + childGroups[i][0],
+      content
     );
   }
 };
