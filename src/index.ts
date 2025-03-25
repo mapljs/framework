@@ -20,16 +20,16 @@ export type ErrorFunc = (err: Err, ...args: any[]) => any;
 /**
  * Describe an error handler
  */
-export type ErrorHandler<T extends ErrorFunc = ErrorFunc, Data = unknown> = [handler: T, data: Data];
+export type ErrorHandler<T extends ErrorFunc = ErrorFunc, Data = any> = [handler: T, data: Data];
 
 /**
  * Describe a middleware
  */
 export type Middleware<T extends MiddlewareFunc> =
   // Normal middleware (with or without error validation)
-  [0 | 1, T] |
+  [0 | 2, T] |
   // Bind value to context
-  [2 | 3, T, key: string];
+  [1 | 3, T, key: string];
 
 /**
  * Describe a handler store
@@ -39,7 +39,7 @@ export type Handler<T extends Func = Func, Data = unknown> = [method: Method, pa
 /**
  * Describe a handler group
  */
-export type Group<E extends ErrorFunc = ErrorFunc, T extends Func = Func, Data = unknown> = [
+export type Group<E extends ErrorFunc = ErrorFunc, T extends Func = Func, Data = any> = [
   middlewares: Middleware<T>[],
   handlers: Handler<T, Data>[],
   errHandler: ErrorHandler<ErrorFunc, Data> | null,
@@ -49,7 +49,7 @@ export type Group<E extends ErrorFunc = ErrorFunc, T extends Func = Func, Data =
 /**
  * Describe a handler child group data
  */
-export type ChildGroup<E extends ErrorFunc, T extends Func, Data = unknown> = [
+export type ChildGroup<E extends ErrorFunc, T extends Func, Data = any> = [
   prefix: string,
   group: Group<E, T, Data>
 ];
@@ -60,19 +60,15 @@ export type ChildGroup<E extends ErrorFunc, T extends Func, Data = unknown> = [
 export type Hook<T extends any[]> = (
   ...args: [
     ...data: T,
-    state: CompilerState<any, any, any>,
-
-    scopeAsync: boolean,
-    contextCreated: boolean,
-
-    compiledErrorHandler: string
+    state: CompilerState,
+    scope: Readonly<ScopeState>
   ]
 ) => string;
 
 /**
  * State for compilation
  */
-export type CompilerState<E extends ErrorFunc, T extends Func, Data> = [
+export type CompilerState = [
   router: Router<string>,
 
   dependencies: any[],
@@ -80,16 +76,23 @@ export type CompilerState<E extends ErrorFunc, T extends Func, Data> = [
   contextInit: string,
 
   compileHandler: Hook<[
-    handler: Handler<T, Data>[2],
-    data: Handler<T, Data>[3],
+    handler: Handler[2],
+    data: Handler[3],
     path: PathTransformResult
   ]>,
-  compileErrorHandler: Hook<[
-    handler: ErrorHandler<E, Data>[0],
-    data: ErrorHandler<E, Data>[1]
-  ]>,
-
+  compileErrorHandler: Hook<ErrorHandler>,
   pathTransformer: PathTransformer
+];
+
+/**
+ * This state doesn't change frequently
+ */
+export type ScopeState = [
+  scopeAsync: boolean,
+  contextCreated: boolean,
+
+  errorHandler: ErrorHandler | null,
+  compiledErrorHandler: string | null
 ];
 
 /**
@@ -119,28 +122,18 @@ export const isFuncAsync: (fn: Func) => fn is (...args: any[]) => Promise<any> =
 
 export const compileGroup = (
   group: Group,
-  state: CompilerState<any, any, any>,
+  state: CompilerState,
+  scope: ScopeState,
 
+  // Path prefix
   prefix: string,
-
   // Previously built content
-  content: string,
-
-  scopeAsync: boolean,
-  contextCreated: boolean,
-
-  compiledErrorHandler: string
+  content: string
 ): void => {
-  // Compile error handler
+  // Set error handler
   if (group[2] != null) {
-    compiledErrorHandler = state[5](
-      group[2][0],
-      group[2][1],
-      state,
-      scopeAsync,
-      contextCreated,
-      compiledErrorHandler
-    );
+    scope[2] = group[2];
+    scope[3] = null;
   }
 
   // Compile middlewares
@@ -152,37 +145,47 @@ export const compileGroup = (
     let call = constants.DEP + state[1].push(fn) + '(';
     if (fn.length > 0) {
       call += selectArgs(state[2], fn.length);
-      if (!contextCreated) {
-        contextCreated = true;
+      if (!scope[1]) {
+        scope[1] = true;
         content += state[3];
+
+        // Reset compiled error
+        if (scope[2] !== null)
+          scope[3] = null;
       }
     }
     call += ');';
 
     if (isFuncAsync(fn)) {
-      if (!scopeAsync) {
-        scopeAsync = true;
+      if (!scope[0]) {
+        scope[0] = true;
         content += constants.ASYNC_START;
+
+        // Reset compiled error
+        if (scope[2] !== null)
+          scope[3] = null;
       }
 
       call = 'await ' + call;
     }
 
-    // Compile middleware
-    switch (middleware[0]) {
-      case 0:
-        content += call;
-        break;
-      case 1:
-        content += 'let ' + constants.ERR + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.ERR + ')){' + compiledErrorHandler + '}';
-        break;
-      case 2:
-        content += constants.CTX + '.' + middleware[2] + '=' + call;
-        break;
-      case 3:
-        content += 'let ' + constants.ERR + '=' + constants.CTX + '.' + middleware[2] + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.ERR + ')){' + compiledErrorHandler + '}';
-        break;
-    }
+    const typ = middleware[0];
+
+    // Modify to a statement that set the context (1 | 3)
+    if ((typ & 1) === 1)
+      call = constants.CTX + '.' + middleware[2] + '=' + call;
+
+    // Need validation (2 | 3)
+    content += typ > 1
+      ? 'let ' + constants.ERR + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.ERR + ')){' + (
+        scope[3] ??= state[5](
+          scope[2]![0],
+          scope[2]![1],
+          state,
+          scope
+        )
+      )
+      : call;
   }
 
   // Register handlers
@@ -204,11 +207,8 @@ export const compileGroup = (
         pathTransform,
 
         state,
-
-        scopeAsync,
-        contextCreated,
-        compiledErrorHandler
-      ) + (scopeAsync ? constants.ASYNC_END : '')
+        scope
+      ) + (scope[0] ? constants.ASYNC_END : '')
     );
   }
 
@@ -216,15 +216,9 @@ export const compileGroup = (
     const childGroup = childGroups[i];
 
     compileGroup(
-      childGroup[1],
-      state,
+      childGroup[1], state, [...scope],
       // Prefix should never ends with '/'
-      childGroup[0] === '/' ? prefix : prefix + childGroup[0],
-
-      content,
-      scopeAsync,
-      contextCreated,
-      compiledErrorHandler
+      childGroup[0] === '/' ? prefix : prefix + childGroup[0], content
     );
   }
 };
