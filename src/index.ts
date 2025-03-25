@@ -106,11 +106,9 @@ export const createArgSet = (args: string[]): string[] => {
   return arr;
 };
 
-export const selectArgs = (argSet: string[], count: number): string => argSet[Math.min(argSet.length - 1, count)];
-
 export const concatPrefix = (prefix: string, path: string): string => {
-  path = prefix + path;
-  return (/.\/$/).test(path) ? prefix : path;
+  const p = prefix + path;
+  return (/.\/$/).test(p) ? prefix : p;
 };
 
 // Detect async functions
@@ -137,7 +135,8 @@ export const compileGroup = (
 
   // Compile middlewares
   for (let i = 0, middlewares = group[0]; i < middlewares.length; i++) {
-    const fn = middlewares[i][1];
+    const middleware = middlewares[i];
+    const fn = middleware[1];
 
     // Analyze function args
     let call = constants.DEP + compilerState[1].push(fn) + '(';
@@ -157,6 +156,8 @@ export const compileGroup = (
     call += ');';
 
     if (isFuncAsync(fn)) {
+      call = 'await ' + call;
+
       if (!scope[0]) {
         scope[0] = true;
         content += constants.ASYNC_START;
@@ -165,18 +166,14 @@ export const compileGroup = (
         if (scope[2] !== null)
           scope[3] = null;
       }
-
-      call = 'await ' + call;
     }
 
-    const typ = middlewares[i][0];
-
     // Modify to a statement that set the context (1 | 3)
-    if ((typ & 1) === 1)
-      call = constants.CTX + '.' + middlewares[i][2] + '=' + call;
+    if ((middleware[0] & 1) === 1)
+      call = constants.CTX + '.' + middleware[2] + '=' + call;
 
     // Need validation (2 | 3)
-    content += typ > 1
+    content += middleware[0] > 1
       ? 'let ' + constants.TMP + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.TMP + ')){' + (
         scope[3] ??= compilerState[4](
           scope[2]![0],
@@ -184,7 +181,7 @@ export const compileGroup = (
           compilerState,
           scope
         )
-      )
+      ) + '}'
       : call;
   }
 
