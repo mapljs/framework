@@ -6,19 +6,9 @@ export const MAPL = 'm';
 export const IS_ERR: string = MAPL + 'ie';
 
 /**
- * Store a temporary value
- */
-export const TMP: string = MAPL + 't';
-
-/**
  * Request headers
  */
 export const HEADERS: string = MAPL + 'h';
-
-/**
- * Dependency prefix
- */
-export const DEP: string = MAPL + 'p';
 
 /**
  * Current context
