@@ -174,14 +174,14 @@ export const compileGroup = (
 
     // Need validation (2 | 3)
     content += middleware[0] > 1
-      ? 'let ' + constants.TMP + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.TMP + ')){' + (
+      ? '{let ' + constants.TMP + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.TMP + ')){' + (
         scope[3] ??= compilerState[4](
           scope[2]![0],
           scope[2]![1],
           compilerState,
           scope
         )
-      ) + '}'
+      ) + '}}'
       : call;
   }
 

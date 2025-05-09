@@ -18,4 +18,4 @@ export const ASYNC_START = 'return (async()=>{';
 /**
  * End async scope
  */
-export const ASYNC_END = '})';
+export const ASYNC_END = '})()';
