@@ -166,8 +166,19 @@ export const compileGroup = (
     }
 
     // Modify to a statement that set the context (1 | 3)
-    if ((middleware[0] & 1) === 1)
+    if ((middleware[0] & 1) === 1) {
+      // Create the context when necessary
+      if (!scope[1]) {
+        scope[1] = true;
+        content += compilerState[2];
+
+        // Reset compiled error
+        if (scope[2] !== null)
+          scope[3] = null;
+      }
+
       call = constants.CTX + '.' + middleware[2] + '=' + call;
+    }
 
     // Need validation (2 | 3)
     content += middleware[0] > 1
