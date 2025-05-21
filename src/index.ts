@@ -112,9 +112,7 @@ export const concatPrefix = (prefix: string, path: string): string => {
 
 // Detect async functions
 const asyncConstructor = (async () => { }).constructor;
-
-// eslint-disable-next-line
-export const isFuncAsync: (fn: Func) => fn is (...args: any[]) => Promise<any> = globalThis.process?.getBuiltinModule?.('util/types').isAsyncFunction as any  ?? ((fn) => fn instanceof asyncConstructor);
+export const isFuncAsync: (fn: Func) => boolean = (fn) => fn instanceof asyncConstructor;
 
 export const compileGroup = (
   group: Group,
