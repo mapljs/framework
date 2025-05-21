@@ -1,4 +1,4 @@
-export * from '@mapl/router/constants';
+export * from '@mapl/router/constants.js';
 
 export const MAPL = 'm';
 

@@ -1,6 +1,6 @@
 {
   "name": "@mapl/framework",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A framework for building web frameworks",
   "keywords": [],
   "license": "MIT",
@@ -24,7 +24,7 @@
     "tsx": "latest",
     "typescript": "latest",
     "typescript-eslint": "latest",
-    "@mapl/router": "^0.4.13",
+    "@mapl/router": "^0.4.14",
     "safe-throw": "^0.0.9"
   }
 }

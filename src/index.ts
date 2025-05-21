@@ -1,5 +1,4 @@
-import { type Router, type Method, insertItemWithParts } from '@mapl/router/method';
-import type { PathTransformer, PathTransformResult } from '@mapl/router/transform';
+import { type Router, type Method, insertItem } from '@mapl/router/method/index.js';
 import type { Err } from 'safe-throw';
 
 /**
@@ -77,10 +76,10 @@ export type CompilerState = [
   compileHandler: Hook<[
     handler: Handler[2],
     data: Handler[3],
-    path: PathTransformResult
+    path: string
   ]>,
-  compileErrorHandler: Hook<ErrorHandler>,
-  pathTransformer: PathTransformer
+
+  compileErrorHandler: Hook<ErrorHandler>
 ];
 
 /**
@@ -188,9 +187,9 @@ export const compileGroup = (
   // Register handlers
   for (let i = 0, handlers = group[1]; i < handlers.length; i++) {
     const handler = handlers[i];
-    const pathTransform = compilerState[5](concatPrefix(prefix, handler[1]));
+    const pathTransform = concatPrefix(prefix, handler[1]);
 
-    insertItemWithParts(
+    insertItem(
       compilerState[0],
 
       // Method and analyze path
