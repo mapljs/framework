@@ -1,4 +1,4 @@
-import { type Router, type Method, insertItem } from '@mapl/router/method/index.js';
+import { type Router, insertItem } from '@mapl/router/method';
 import type { Err } from 'safe-throw';
 
 /**
@@ -33,7 +33,7 @@ export type Middleware<T extends MiddlewareFunc> =
 /**
  * Describe a handler store
  */
-export type Handler<T extends Func = Func, Data = unknown> = [method: Method, path: string, handler: T, data: Data];
+export type Handler<T extends Func = Func, Data = unknown> = [method: string, path: string, handler: T, data: Data];
 
 /**
  * Describe a handler group
