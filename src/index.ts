@@ -112,11 +112,12 @@ export const concatPrefix = (prefix: string, path: string): string => {
 
 // Detect async functions
 const asyncConstructor = (async () => { }).constructor;
-export const isFuncAsync: (fn: Func) => boolean = (fn) => fn instanceof asyncConstructor;
+
+// Compiler state
+export const compilerState: CompilerState = new Array(5) as any;
 
 export const compileGroup = (
   group: Group,
-  compilerState: CompilerState,
   scope: ScopeState,
 
   // Path prefix
@@ -152,7 +153,7 @@ export const compileGroup = (
     }
     call += ');';
 
-    if (isFuncAsync(fn)) {
+    if (fn instanceof asyncConstructor) {
       call = 'await ' + call;
 
       if (!scope[0]) {
@@ -194,7 +195,7 @@ export const compileGroup = (
   }
 
   // Register handlers
-  for (let i = 0, handlers = group[1]; i < handlers.length; i++) {
+  for (let i = 0, handlers = group[1], asyncEnd = scope[0] ? constants.ASYNC_END : ''; i < handlers.length; i++) {
     const handler = handlers[i];
     const pathTransform = concatPrefix(prefix, handler[1]);
 
@@ -213,14 +214,13 @@ export const compileGroup = (
 
         compilerState,
         scope
-      ) + (scope[0] ? constants.ASYNC_END : '')
+      ) + asyncEnd
     );
   }
 
   for (let i = 0, childGroups = group[3]; i < childGroups.length; i++) {
     compileGroup(
       childGroups[i][1],
-      compilerState,
       [...scope],
       childGroups[i][0] === '/' ? prefix : prefix + childGroups[i][0],
       content
