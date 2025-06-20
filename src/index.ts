@@ -111,7 +111,7 @@ export const concatPrefix = (prefix: string, path: string): string => {
 };
 
 // Detect async functions
-const asyncConstructor = (async () => { }).constructor;
+export const AsyncFunction: Function = (async () => { }).constructor;
 
 // Compiler state
 export const compilerState: CompilerState = new Array(5) as any;
@@ -153,7 +153,7 @@ export const compileGroup = (
     }
     call += ');';
 
-    if (fn instanceof asyncConstructor) {
+    if (fn instanceof AsyncFunction) {
       call = 'await ' + call;
 
       if (!scope[0]) {
