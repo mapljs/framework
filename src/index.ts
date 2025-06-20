@@ -59,7 +59,6 @@ export type ChildGroup<E extends ErrorFunc, T extends Func, Data = any> = [
 export type Hook<T extends any[]> = (
   ...args: [
     ...data: T,
-    state: CompilerState,
     scope: Readonly<ScopeState>
   ]
 ) => string;
@@ -187,7 +186,6 @@ export const compileGroup = (
         scope[3] ??= compilerState[4](
           scope[2]![0],
           scope[2]![1],
-          compilerState,
           scope
         )
       ) + '}}'
@@ -211,8 +209,6 @@ export const compileGroup = (
         handler[2],
         handler[3],
         pathTransform,
-
-        compilerState,
         scope
       ) + asyncEnd
     );
