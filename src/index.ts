@@ -25,6 +25,7 @@ export type ErrorHandler<T extends ErrorFunc = ErrorFunc, Data = any> = [handler
  * Describe a middleware
  */
 export type Middleware<T extends MiddlewareFunc> =
+  [-1, (scope: ScopeState) => string] |
   // Normal middleware (with or without error validation)
   [0 | 2, T] |
   // Bind value to context
@@ -100,6 +101,7 @@ export type ContextInit<T = unknown> = (headers: [string, string][]) => T;
 export const createArgSet = (args: string[]): string[] => {
   const len = args.length;
   const arr = new Array(len + 1);
+  arr[0] = '';
   for (let i = 1; i <= len; i++) arr[i] = args.slice(0, i).join();
   return arr;
 };
@@ -115,6 +117,37 @@ export const AsyncFunction: Function = (async () => { }).constructor;
 // Compiler state
 export const compilerState: CompilerState = new Array(5) as any;
 
+// Utils
+export const createContext = (scope: ScopeState): string => {
+  // Create the context when necessary
+  if (!scope[1]) {
+    scope[1] = true;
+
+    // Reset compiled error
+    if (scope[2] !== null)
+      scope[3] = null;
+
+    return compilerState[2];
+  }
+
+  return '';
+}
+
+export const createAsyncScope = (scope: ScopeState): string => {
+  if (!scope[0]) {
+    scope[0] = true;
+
+    // Reset compiled error
+    if (scope[2] !== null)
+      scope[3] = null;
+
+    return constants.ASYNC_START;
+  }
+
+  return '';
+}
+
+// Main fn
 export const compileGroup = (
   group: Group,
   scope: ScopeState,
@@ -135,61 +168,39 @@ export const compileGroup = (
     const middleware = middlewares[i];
     const fn = middleware[1];
 
-    // Analyze function args
-    let call = constants.DEP + compilerState[1].push(fn) + '(';
-    if (fn.length > 0) {
-      call += constants.CTX;
-
-      // Create the context when necessary
-      if (!scope[1]) {
-        scope[1] = true;
-        content += compilerState[2];
-
-        // Reset compiled error
-        if (scope[2] !== null)
-          scope[3] = null;
+    if (middleware[0] === -1)
+      content += fn(scope);
+    else {
+      // Analyze function args
+      let call = constants.DEP + compilerState[1].push(fn) + '(';
+      if (fn.length > 0) {
+        call += constants.CTX;
+        content += createContext(scope);
       }
-    }
-    call += ');';
+      call += ');';
 
-    if (fn instanceof AsyncFunction) {
-      call = 'await ' + call;
-
-      if (!scope[0]) {
-        scope[0] = true;
-        content += constants.ASYNC_START;
-
-        // Reset compiled error
-        if (scope[2] !== null)
-          scope[3] = null;
-      }
-    }
-
-    // Modify to a statement that set the context (1 | 3)
-    if ((middleware[0] & 1) === 1) {
-      // Create the context when necessary
-      if (!scope[1]) {
-        scope[1] = true;
-        content += compilerState[2];
-
-        // Reset compiled error
-        if (scope[2] !== null)
-          scope[3] = null;
+      if (fn instanceof AsyncFunction) {
+        call = 'await ' + call;
+        content += createAsyncScope(scope);
       }
 
-      call = constants.CTX + '.' + middleware[2] + '=' + call;
-    }
+      // Modify to a statement that set the context (1 | 3)
+      if ((middleware[0] & 1) === 1) {
+        call = constants.CTX + '.' + middleware[2] + '=' + call;
+        content += createContext(scope);
+      }
 
-    // Need validation (2 | 3)
-    content += middleware[0] > 1
-      ? '{let ' + constants.TMP + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.TMP + ')){' + (
-        scope[3] ??= compilerState[4](
-          scope[2]![0],
-          scope[2]![1],
-          scope
-        )
-      ) + '}}'
-      : call;
+      // Need validation (2 | 3)
+      content += middleware[0] > 1
+        ? '{let ' + constants.TMP + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.TMP + ')){' + (
+          scope[3] ??= compilerState[4](
+            scope[2]![0],
+            scope[2]![1],
+            scope
+          )
+        ) + '}}'
+        : call;
+    }
   }
 
   // Register handlers
