@@ -1,4 +1,4 @@
-A compiler framework for web frameworks.
+A route compiler for web frameworks.
 
 Features:
 - Route grouping
