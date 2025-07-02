@@ -1,7 +1,7 @@
 {
-  "name": "@mapl/router",
-  "version": "0.1.8",
-  "description": "A route compiler",
+  "name": "@mapl/framework",
+  "version": "0.2.0",
+  "description": "A compiler framework",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mapljs/framework.git"
