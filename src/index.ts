@@ -228,7 +228,7 @@ export const compileGroup = (
   for (let i = 0, childGroups = group[3]; i < childGroups.length; i++) {
     compileGroup(
       childGroups[i][1],
-      [...scope],
+      scope.slice() as any,
       childGroups[i][0] === '/' ? prefix : prefix + childGroups[i][0],
       content
     );
