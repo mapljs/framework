@@ -157,7 +157,7 @@ export const compileGroup = (
   // Previously built content
   content: string
 ): void => {
-  // Set error handler
+  // Reset error handler when necessary
   if (group[2] != null) {
     scope[2] = group[2];
     scope[3] = null;
@@ -167,8 +167,9 @@ export const compileGroup = (
   for (let i = 0, middlewares = group[0]; i < middlewares.length; i++) {
     const middleware = middlewares[i];
     const fn = middleware[1];
+    const id = middleware[0];
 
-    if (middleware[0] === -1)
+    if (id === -1)
       content += fn(scope);
     else {
       // Analyze function args
@@ -184,22 +185,28 @@ export const compileGroup = (
         content += createAsyncScope(scope);
       }
 
-      // Modify to a statement that set the context (1 | 3)
-      if ((middleware[0] & 1) === 1) {
-        call = constants.CTX + '.' + middleware[2] + '=' + call;
-        content += createContext(scope);
-      }
+      // A middleware that does nothing
+      if (id === 0)
+        content += call;
+      else {
+        // Modify to a statement that set the context (1 | 3)
+        if ((id & 1) === 1) {
+          call = constants.CTX + '.' + middleware[2] + '=' + call;
+          content += createContext(scope);
+        }
 
-      // Need validation (2 | 3)
-      content += middleware[0] > 1
-        ? '{let ' + constants.TMP + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.TMP + ')){' + (
-          scope[3] ??= compilerState[4](
+        // Need validation (2 | 3)
+        if (id > 1)
+          content += (
+            id === 2
+              ? 'if(' + constants.IS_ERR + '(' + call
+              : '{let ' + constants.TMP + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.TMP
+          ) + ')){' + (scope[3] ??= compilerState[4](
             scope[2]![0],
             scope[2]![1],
             scope
-          )
-        ) + '}}'
-        : call;
+          )) + (id === 2 ? '}' : '}}');
+      }
     }
   }
 
@@ -215,7 +222,7 @@ export const compileGroup = (
       handler[0],
       pathTransform,
 
-      // Correctly wrap async end
+      // Compile a route
       content + compilerState[3](
         handler[2],
         handler[3],
