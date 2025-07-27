@@ -10,13 +10,13 @@ export const main: IRouter = {
         router,
         route.method,
         route.path.endsWith('*') ? route.path + '*' : route.path,
-        route.item
+        route.item,
       );
     }
 
     return (method, path) => {
       const res = findRoute(router, method, path);
       return res == null ? null : [res.data, res.params];
-    }
-  }
-}
+    };
+  },
+};

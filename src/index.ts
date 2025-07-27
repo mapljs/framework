@@ -19,31 +19,43 @@ export type ErrorFunc = (err: Err, ...args: any[]) => any;
 /**
  * Describe an error handler
  */
-export type ErrorHandler<T extends ErrorFunc = ErrorFunc, Data = any> = [handler: T, data: Data];
+export type ErrorHandler<T extends ErrorFunc = ErrorFunc, Data = any> = [
+  handler: T,
+  data: Data,
+];
 
 /**
  * Describe a middleware
  */
 export type Middleware<T extends MiddlewareFunc> =
-  [-1, (scope: ScopeState) => string] |
+  | [-1, (scope: ScopeState) => string]
   // Normal middleware (with or without error validation)
-  [0 | 2, T] |
+  | [0 | 2, T]
   // Bind value to context
-  [1 | 3, T, key: string];
+  | [1 | 3, T, key: string];
 
 /**
  * Describe a handler store
  */
-export type Handler<T extends Func = Func, Data = unknown> = [method: string, path: string, handler: T, data: Data];
+export type Handler<T extends Func = Func, Data = unknown> = [
+  method: string,
+  path: string,
+  handler: T,
+  data: Data,
+];
 
 /**
  * Describe a handler group
  */
-export type Group<E extends ErrorFunc = ErrorFunc, T extends Func = Func, Data = any> = [
+export type Group<
+  E extends ErrorFunc = ErrorFunc,
+  T extends Func = Func,
+  Data = any,
+> = [
   middlewares: Middleware<T>[],
   handlers: Handler<T, Data>[],
   errHandler: ErrorHandler<ErrorFunc, Data> | null,
-  children: ChildGroup<E, T, Data>[]
+  children: ChildGroup<E, T, Data>[],
 ];
 
 /**
@@ -51,17 +63,14 @@ export type Group<E extends ErrorFunc = ErrorFunc, T extends Func = Func, Data =
  */
 export type ChildGroup<E extends ErrorFunc, T extends Func, Data = any> = [
   prefix: string,
-  group: Group<E, T, Data>
+  group: Group<E, T, Data>,
 ];
 
 /**
  * Describe a hook
  */
 export type Hook<T extends any[]> = (
-  ...args: [
-    ...data: T,
-    scope: Readonly<ScopeState>
-  ]
+  ...args: [...data: T, scope: Readonly<ScopeState>]
 ) => string;
 
 /**
@@ -69,17 +78,10 @@ export type Hook<T extends any[]> = (
  */
 export type CompilerState = [
   router: Router<string>,
-
   dependencies: any[],
   contextInit: string,
-
-  compileHandler: Hook<[
-    handler: Handler[2],
-    data: Handler[3],
-    path: string
-  ]>,
-
-  compileErrorHandler: Hook<ErrorHandler>
+  compileHandler: Hook<[handler: Handler[2], data: Handler[3], path: string]>,
+  compileErrorHandler: Hook<ErrorHandler>,
 ];
 
 /**
@@ -88,9 +90,8 @@ export type CompilerState = [
 export type ScopeState = [
   scopeAsync: boolean,
   contextCreated: boolean,
-
   errorHandler: ErrorHandler | null,
-  compiledErrorHandler: string | null
+  compiledErrorHandler: string | null,
 ];
 
 /**
@@ -108,11 +109,11 @@ export const createArgSet = (args: string[]): string[] => {
 
 export const concatPrefix = (prefix: string, path: string): string => {
   const p = prefix + path;
-  return (/.\/$/).test(p) ? prefix : p;
+  return /.\/$/.test(p) ? prefix : p;
 };
 
 // Detect async functions
-export const AsyncFunction: Function = (async () => { }).constructor;
+export const AsyncFunction: Function = (async () => {}).constructor;
 
 // Compiler state
 export const compilerState: CompilerState = new Array(5) as any;
@@ -124,28 +125,26 @@ export const createContext = (scope: ScopeState): string => {
     scope[1] = true;
 
     // Reset compiled error
-    if (scope[2] !== null)
-      scope[3] = null;
+    if (scope[2] !== null) scope[3] = null;
 
     return compilerState[2];
   }
 
   return '';
-}
+};
 
 export const createAsyncScope = (scope: ScopeState): string => {
   if (!scope[0]) {
     scope[0] = true;
 
     // Reset compiled error
-    if (scope[2] !== null)
-      scope[3] = null;
+    if (scope[2] !== null) scope[3] = null;
 
     return constants.ASYNC_START;
   }
 
   return '';
-}
+};
 
 // Main fn
 export const compileGroup = (
@@ -155,7 +154,7 @@ export const compileGroup = (
   // Path prefix
   prefix: string,
   // Previously built content
-  content: string
+  content: string,
 ): void => {
   // Reset error handler when necessary
   if (group[2] != null) {
@@ -169,8 +168,7 @@ export const compileGroup = (
     const fn = middleware[1];
     const id = middleware[0];
 
-    if (id === -1)
-      content += fn(scope);
+    if (id === -1) content += fn(scope);
     else {
       // Analyze function args
       let call = constants.DEP + compilerState[1].push(fn) + '(';
@@ -178,40 +176,71 @@ export const compileGroup = (
         call += constants.CTX;
         content += createContext(scope);
       }
-      call += ');';
+      call += ')';
 
+      // Wrap everything in async if necessary
       if (fn instanceof AsyncFunction) {
         call = 'await ' + call;
         content += createAsyncScope(scope);
       }
 
-      // A middleware that does nothing
       if (id === 0)
-        content += call;
-      else {
-        // Modify to a statement that set the context (1 | 3)
-        if ((id & 1) === 1) {
-          call = constants.CTX + '.' + middleware[2] + '=' + call;
-          content += createContext(scope);
-        }
-
-        // Need validation (2 | 3)
-        if (id > 1)
-          content += (
-            id === 2
-              ? 'if(' + constants.IS_ERR + '(' + call
-              : '{let ' + constants.TMP + '=' + call + 'if(' + constants.IS_ERR + '(' + constants.TMP
-          ) + ')){' + (scope[3] ??= compilerState[4](
-            scope[2]![0],
-            scope[2]![1],
-            scope
-          )) + (id === 2 ? '}' : '}}');
-      }
+        // Assign call directly
+        content += call + ';';
+      else if (id === 1)
+        // Assign to context variable
+        content +=
+          createContext(scope) +
+          constants.CTX +
+          '.' +
+          middleware[2] +
+          '=' +
+          call +
+          ';';
+      else if (id === 2)
+        // Check directly instead of creating temporary variables
+        content +=
+          'if(' +
+          constants.IS_ERR +
+          '(' +
+          call +
+          ')){' +
+          (scope[3] ??= compilerState[4](scope[2]![0], scope[2]![1], scope)) +
+          '}';
+      else if (id === 3)
+        content +=
+          // Create temporary variable
+          '{let ' +
+          constants.TMP +
+          '=' +
+          call +
+          // Check error
+          ';if(' +
+          constants.IS_ERR +
+          '(' +
+          constants.TMP +
+          ')){' +
+          (scope[3] ??= compilerState[4](scope[2]![0], scope[2]![1], scope)) +
+          '}' +
+          // Assign to context variable
+          createContext(scope) +
+          constants.CTX +
+          '.' +
+          middleware[2] +
+          '=' +
+          constants.TMP +
+          '}';
     }
   }
 
   // Register handlers
-  for (let i = 0, handlers = group[1], asyncEnd = scope[0] ? constants.ASYNC_END : ''; i < handlers.length; i++) {
+  for (
+    let i = 0,
+      handlers = group[1],
+      asyncEnd = scope[0] ? constants.ASYNC_END : '';
+    i < handlers.length;
+    i++
+  ) {
     const handler = handlers[i];
     const pathTransform = concatPrefix(prefix, handler[1]);
 
@@ -223,12 +252,9 @@ export const compileGroup = (
       pathTransform,
 
       // Compile a route
-      content + compilerState[3](
-        handler[2],
-        handler[3],
-        pathTransform,
-        scope
-      ) + asyncEnd
+      content +
+        compilerState[3](handler[2], handler[3], pathTransform, scope) +
+        asyncEnd,
     );
   }
 
@@ -237,7 +263,7 @@ export const compileGroup = (
       childGroups[i][1],
       scope.slice() as any,
       childGroups[i][0] === '/' ? prefix : prefix + childGroups[i][0],
-      content
+      content,
     );
   }
 };

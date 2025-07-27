@@ -5,14 +5,20 @@ import { PatternRouter } from 'hono/router/pattern-router';
 import type { Router } from 'hono/router';
 import type { IRouter, IHandler } from '../types';
 
-const init = (name: string, C: { new(): Router<IHandler> }): IRouter => ({
+const init = (name: string, C: { new (): Router<IHandler> }): IRouter => ({
   name: 'hono - ' + name,
   fn: (routes) => {
     const router = new C();
 
     // Hono does not capture rest parameters?
     for (const route of routes)
-      router.add(route.method, route.path.endsWith('*') ? route.path.slice(0, -1) + ':_{.*}' : route.path, route.item);
+      router.add(
+        route.method,
+        route.path.endsWith('*')
+          ? route.path.slice(0, -1) + ':_{.*}'
+          : route.path,
+        route.item,
+      );
 
     if (C === RegExpRouter)
       return (method, path) => {
@@ -22,17 +28,16 @@ const init = (name: string, C: { new(): Router<IHandler> }): IRouter => ({
           // Need to get values of params
           const params = [];
           for (let i = 1, stash = res[1]!; i < stash.length; i++)
-            if (stash[i])
-              params.push(stash[i]);
+            if (stash[i]) params.push(stash[i]);
           return [res[0][0][0], params];
         }
-      }
+      };
 
     return (method, path) => {
       const res = router.match(method, path);
-      return res[0].length === 0 ? null : res[0][0] as any;
-    }
-  }
+      return res[0].length === 0 ? null : (res[0][0] as any);
+    };
+  },
 });
 
 export const regexp = init('regexp', RegExpRouter);

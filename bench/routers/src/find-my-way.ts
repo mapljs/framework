@@ -12,6 +12,6 @@ export const main: IRouter = {
     return (method, path) => {
       const res = router.find(method as HTTPMethod, path);
       return res === null ? null : [res.handler as any, res.params];
-    }
-  }
+    };
+  },
 };

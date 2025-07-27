@@ -7,5 +7,5 @@ export default [
   ...Object.values(mapl),
   ...Object.values(rou3),
   ...Object.values(findMyWay),
-  ...Object.values(hono)
+  ...Object.values(hono),
 ];

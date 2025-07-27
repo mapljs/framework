@@ -26,11 +26,15 @@ export const compiled: IRouter = {
       // Insert the return statement
       insertItemWithParts(
         router,
-        route.method, result,
-        `return[${name},[${result[0].map((_, i) => PARAMS + i).join()}]];`
-      )
+        route.method,
+        result,
+        `return[${name},[${result[0].map((_, i) => PARAMS + i).join()}]];`,
+      );
     }
 
-    return Function(...deps, `return (_,${PATH})=>{${compile(router, o2, '_', '', 0)}}`)(...values);
-  }
-}
+    return Function(
+      ...deps,
+      `return (_,${PATH})=>{${compile(router, o2, '_', '', 0)}}`,
+    )(...values);
+  },
+};

@@ -16,7 +16,6 @@ const analyzeRoute = (route: [method: string, path: string], i: number) => {
 
   // Get the last part
   if (parts.length > params.length) path += parts[params.length];
-
   // Wildcard
   else if (flag === 2) {
     const val = '/' + Math.random();
@@ -29,9 +28,9 @@ const analyzeRoute = (route: [method: string, path: string], i: number) => {
     method: route[0],
     path,
     expected: i,
-    params
+    params,
   };
-}
+};
 
 const shuffleArray = (array: any[]) => {
   for (let i = array.length - 1; i > 0; i--) {
@@ -40,9 +39,13 @@ const shuffleArray = (array: any[]) => {
   }
 
   return array;
-}
+};
 
-const loadTest = (label: string, routes: [method: string, path: string][], invalidRoutes: [method: string, path: string][]) => {
+const loadTest = (
+  label: string,
+  routes: [method: string, path: string][],
+  invalidRoutes: [method: string, path: string][],
+) => {
   const testRoutes = routes.map(analyzeRoute);
   const invalidTestRoutes = invalidRoutes.map(analyzeRoute);
 
@@ -51,7 +54,7 @@ const loadTest = (label: string, routes: [method: string, path: string][], inval
       const resultRoutes = routes.map((route, i) => ({
         method: route[0],
         path: route[1],
-        item: () => i
+        item: () => i,
       }));
 
       // Track build time
@@ -72,13 +75,15 @@ const loadTest = (label: string, routes: [method: string, path: string][], inval
             if (params == null) params = [];
             else if (!Array.isArray(params)) {
               const arr = [];
-              for (const prop in params)
-                arr.push(params[prop]);
+              for (const prop in params) arr.push(params[prop]);
               params = arr as any;
             }
 
             // Checks
-            if (actual() === test.expected && inspect(params) === inspect(test.params))
+            if (
+              actual() === test.expected &&
+              inspect(params) === inspect(test.params)
+            )
               continue;
           }
 
@@ -107,31 +112,35 @@ const loadTest = (label: string, routes: [method: string, path: string][], inval
           bench(methods: string[], paths: string[]) {
             for (let i = 0; i < methods.length; i++)
               do_not_optimize(match(methods[i], paths[i]));
-          }
-        }
+          },
+        };
       });
     }
-  })
-}
-loadTest('api', [
-  ['GET', '/user'],
-  ['GET', '/user/comments'],
-  ['GET', '/user/avatar'],
-  ['GET', '/user/lookup/username/:username'],
-  ['GET', '/user/lookup/email/:address'],
-  ['GET', '/event/:id'],
-  ['GET', '/event/:id/comments'],
-  ['POST', '/event/:id/comment'],
-  ['GET', '/map/:location/events'],
-  ['GET', '/status'],
-  ['GET', '/very/deeply/nested/route/hello/there'],
-  ['GET', '/static/*'],
-], [
-  ['GET', '/stat'],
-  ['GET', '/user/lookup/email'],
-  ['GET', '/user/lookup/username/a/b'],
-  ['POST', '/use'],
-  ['ANY', '/method']
-]);
+  });
+};
+loadTest(
+  'api',
+  [
+    ['GET', '/user'],
+    ['GET', '/user/comments'],
+    ['GET', '/user/avatar'],
+    ['GET', '/user/lookup/username/:username'],
+    ['GET', '/user/lookup/email/:address'],
+    ['GET', '/event/:id'],
+    ['GET', '/event/:id/comments'],
+    ['POST', '/event/:id/comment'],
+    ['GET', '/map/:location/events'],
+    ['GET', '/status'],
+    ['GET', '/very/deeply/nested/route/hello/there'],
+    ['GET', '/static/*'],
+  ],
+  [
+    ['GET', '/stat'],
+    ['GET', '/user/lookup/email'],
+    ['GET', '/user/lookup/username/a/b'],
+    ['POST', '/use'],
+    ['ANY', '/method'],
+  ],
+);
 
 run();
