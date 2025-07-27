@@ -92,6 +92,7 @@ export type ScopeState = [
   contextCreated: boolean,
   errorHandler: ErrorHandler | null,
   compiledErrorHandler: string | null,
+  hasTmp: boolean,
 ];
 
 /**
@@ -207,11 +208,10 @@ export const compileGroup = (
           ')){' +
           (scope[3] ??= compilerState[4](scope[2]![0], scope[2]![1], scope)) +
           '}';
-      else if (id === 3)
+      else if (id === 3) {
         content +=
           // Create temporary variable
-          '{let ' +
-          constants.TMP +
+          (scope[4] ? 'let ' + constants.TMP : constants.TMP) +
           '=' +
           call +
           // Check error
@@ -229,7 +229,10 @@ export const compileGroup = (
           middleware[2] +
           '=' +
           constants.TMP +
-          '}';
+          ';';
+
+        scope[4] = true;
+      }
     }
   }
 
