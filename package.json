@@ -1,6 +1,6 @@
 {
   "name": "@mapl/framework",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "A compiler framework",
   "repository": {
     "type": "git",
@@ -13,7 +13,6 @@
   "scripts": {
     "task": "bun scripts/task.ts",
     "fmt": "biome format .",
-    "build:test": "bun task build && bun test",
     "build:publish": "bun task build && bun task report-size && bun task publish"
   },
   "devDependencies": {

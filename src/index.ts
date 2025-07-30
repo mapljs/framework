@@ -54,16 +54,8 @@ export type Group<
 > = [
   middlewares: Middleware<T>[],
   handlers: Handler<T, Data>[],
-  errHandler: ErrorHandler<ErrorFunc, Data> | null,
-  children: ChildGroup<E, T, Data>[],
-];
-
-/**
- * Describe a handler child group data
- */
-export type ChildGroup<E extends ErrorFunc, T extends Func, Data = any> = [
-  prefix: string,
-  group: Group<E, T, Data>,
+  errHandler: ErrorHandler<ErrorFunc, Data> | null | undefined,
+  children: Record<string, Group<E, T, Data>> | null | undefined,
 ];
 
 /**
@@ -90,8 +82,8 @@ export type CompilerState = [
 export type ScopeState = [
   scopeAsync: boolean,
   contextCreated: boolean,
-  errorHandler: ErrorHandler | null,
-  compiledErrorHandler: string | null,
+  errorHandler: ErrorHandler | null | undefined,
+  compiledErrorHandler: string | null | undefined,
   hasTmp: boolean,
 ];
 
@@ -120,32 +112,32 @@ export const AsyncFunction: Function = (async () => {}).constructor;
 export const compilerState: CompilerState = new Array(5) as any;
 
 // Utils
+export const compileErrorHandler = (scope: ScopeState): string => scope[3] ??= compilerState[4](scope[2]![0], scope[2]![1], scope);
+export const clearErrorHandler = (scope: ScopeState): void => {
+  if (scope[2] != null) scope[3] = null;
+}
+
 export const createContext = (scope: ScopeState): string => {
-  // Create the context when necessary
-  if (!scope[1]) {
-    scope[1] = true;
+  if (scope[1]) return '';
 
-    // Reset compiled error
-    if (scope[2] !== null) scope[3] = null;
-
-    return compilerState[2];
-  }
-
-  return '';
+  scope[1] = true;
+  clearErrorHandler(scope);
+  return compilerState[2];
 };
 
 export const createAsyncScope = (scope: ScopeState): string => {
-  if (!scope[0]) {
-    scope[0] = true;
+  if (scope[0]) return '';
 
-    // Reset compiled error
-    if (scope[2] !== null) scope[3] = null;
-
-    return constants.ASYNC_START;
-  }
-
-  return '';
+  scope[0] = true;
+  clearErrorHandler(scope);
+  return constants.ASYNC_START;
 };
+
+export const setTmp = (scope: ScopeState): string => {
+  if (scope[4]) return constants.TMP;
+  scope[4] = true;
+  return 'let ' + constants.TMP;
+}
 
 // Main fn
 export const compileGroup = (
@@ -206,12 +198,12 @@ export const compileGroup = (
           '(' +
           call +
           ')){' +
-          (scope[3] ??= compilerState[4](scope[2]![0], scope[2]![1], scope)) +
+          compileErrorHandler(scope) +
           '}';
       else if (id === 3) {
         content +=
           // Create temporary variable
-          (scope[4] ? 'let ' + constants.TMP : constants.TMP) +
+          setTmp(scope) +
           '=' +
           call +
           // Check error
@@ -220,7 +212,7 @@ export const compileGroup = (
           '(' +
           constants.TMP +
           ')){' +
-          (scope[3] ??= compilerState[4](scope[2]![0], scope[2]![1], scope)) +
+          compileErrorHandler(scope) +
           '}' +
           // Assign to context variable
           createContext(scope) +
@@ -230,8 +222,6 @@ export const compileGroup = (
           '=' +
           constants.TMP +
           ';';
-
-        scope[4] = true;
       }
     }
   }
@@ -261,12 +251,13 @@ export const compileGroup = (
     );
   }
 
-  for (let i = 0, childGroups = group[3]; i < childGroups.length; i++) {
-    compileGroup(
-      childGroups[i][1],
-      scope.slice() as any,
-      childGroups[i][0] === '/' ? prefix : prefix + childGroups[i][0],
-      content,
-    );
-  }
+  const childGroups = group[3];
+  if (childGroups != null)
+    for (const childPrefix in childGroups)
+      compileGroup(
+        childGroups[childPrefix],
+        scope.slice() as any,
+        childPrefix === '/' ? prefix : prefix + childPrefix,
+        content,
+      );
 };
