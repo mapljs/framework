@@ -112,10 +112,11 @@ export const AsyncFunction: Function = (async () => {}).constructor;
 export const compilerState: CompilerState = new Array(5) as any;
 
 // Utils
-export const compileErrorHandler = (scope: ScopeState): string => scope[3] ??= compilerState[4](scope[2]![0], scope[2]![1], scope);
+export const compileErrorHandler = (scope: ScopeState): string =>
+  (scope[3] ??= compilerState[4](scope[2]![0], scope[2]![1], scope));
 export const clearErrorHandler = (scope: ScopeState): void => {
   if (scope[2] != null) scope[3] = null;
-}
+};
 
 export const createContext = (scope: ScopeState): string => {
   if (scope[1]) return '';
@@ -137,7 +138,7 @@ export const setTmp = (scope: ScopeState): string => {
   if (scope[4]) return constants.TMP;
   scope[4] = true;
   return 'let ' + constants.TMP;
-}
+};
 
 // Main fn
 export const compileGroup = (
@@ -193,10 +194,15 @@ export const compileGroup = (
       else if (id === 2)
         // Check directly instead of creating temporary variables
         content +=
-          'if(' +
+          // Create temporary variable
+          setTmp(scope) +
+          '=' +
+          call +
+          // Check error
+          ';if(' +
           constants.IS_ERR +
           '(' +
-          call +
+          constants.TMP +
           ')){' +
           compileErrorHandler(scope) +
           '}';
