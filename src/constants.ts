@@ -6,11 +6,6 @@ export const MAPL = 'm';
 export const IS_ERR: string = MAPL + 'e';
 
 /**
- * Request headers
- */
-export const HEADERS: string = MAPL + 'h';
-
-/**
  * Start async scope
  */
 export const ASYNC_START = 'return (async()=>{';
