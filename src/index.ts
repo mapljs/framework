@@ -115,7 +115,7 @@ export const compilerState: CompilerState = new Array(5) as any;
 export const compileErrorHandler = (scope: ScopeState): string =>
   (scope[3] ??= compilerState[4](scope[2]![0], scope[2]![1], scope));
 export const clearErrorHandler = (scope: ScopeState): void => {
-  if (scope[2] != null) scope[3] = null;
+  scope[2] != null && (scope[3] = null);
 };
 
 export const createContext = (scope: ScopeState): string => {
