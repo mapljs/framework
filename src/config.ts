@@ -1,3 +1,3 @@
 export default {
-  hydrateMode: true,
+  hydrateDependency: true,
 } as const;
