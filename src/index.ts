@@ -66,17 +66,6 @@ export type Hook<T extends any[]> = (
 ) => string;
 
 /**
- * State for compilation
- */
-export type CompilerState = [
-  router: Router<string>,
-  dependencies: any[],
-  contextInit: string,
-  compileHandler: Hook<[handler: Handler[2], data: Handler[3], path: string]>,
-  compileErrorHandler: Hook<ErrorHandler>,
-];
-
-/**
  * This state doesn't change frequently
  */
 export type ScopeState = [
@@ -109,7 +98,13 @@ export const concatPrefix = (prefix: string, path: string): string => {
 export const AsyncFunction: Function = (async () => {}).constructor;
 
 // Compiler state
-export const compilerState: CompilerState = new Array(5) as any;
+export const compilerState: [
+  router: Router<string>,
+  dependencies: any[],
+  contextInit: string,
+  compileHandler: Hook<[handler: Handler[2], data: Handler[3], path: string]>,
+  compileErrorHandler: Hook<ErrorHandler>,
+] = [, , , , ,] as any;
 
 // Utils
 export const compileErrorHandler = (scope: ScopeState): string =>
@@ -138,6 +133,60 @@ export const setTmp = (scope: ScopeState): string => {
   if (scope[4]) return constants.TMP;
   scope[4] = true;
   return 'let ' + constants.TMP;
+};
+
+export const hydrateDependency = (
+  group: Group,
+  scope: ScopeState,
+  prefix: string,
+): void => {
+  // Reset error handler when necessary
+  if (group[2] != null) {
+    scope[2] = group[2];
+    scope[3] = null;
+  }
+
+  // Compile middlewares
+  for (let i = 0, middlewares = group[0]; i < middlewares.length; i++) {
+    const middleware = middlewares[i];
+    const fn = middleware[1];
+    const id = middleware[0];
+
+    if (id === -1) fn(scope);
+    else {
+      compilerState[1].push(fn);
+      if (fn.length > 0) createContext(scope);
+
+      // Wrap everything in async if necessary
+      if (fn instanceof AsyncFunction) createAsyncScope(scope);
+
+      if (id === 1) createContext(scope);
+      else if (id === 2) {
+        setTmp(scope);
+        compileErrorHandler(scope);
+      } else if (id === 3) {
+        setTmp(scope);
+        compileErrorHandler(scope);
+        createContext(scope);
+      }
+    }
+  }
+
+  // Register handlers
+  for (let i = 0, handlers = group[1]; i < handlers.length; i++) {
+    const handler = handlers[i];
+    const pathTransform = concatPrefix(prefix, handler[1]);
+    compilerState[3](handler[2], handler[3], pathTransform, scope);
+  }
+
+  const childGroups = group[3];
+  if (childGroups != null)
+    for (const childPrefix in childGroups)
+      hydrateDependency(
+        childGroups[childPrefix],
+        scope.slice() as any,
+        childPrefix === '/' ? prefix : prefix + childPrefix,
+      );
 };
 
 // Main fn

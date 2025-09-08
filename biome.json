@@ -68,7 +68,8 @@
         "noAssignInExpressions": "off",
         "noExplicitAny": "off",
         "noImplicitAnyLet": "off"
-      }
+      },
+      "recommended": false
     }
   }
 }
