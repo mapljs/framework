@@ -1,5 +1,5 @@
 import { type Router, insertItem } from '@mapl/router/method';
-import type { Err } from 'safe-throw';
+import type { Err } from '@safe-std/error';
 
 /**
  * Describe a middleware function
@@ -89,11 +89,6 @@ export const createArgSet = (args: string[]): string[] => {
   return arr;
 };
 
-export const concatPrefix = (prefix: string, path: string): string => {
-  const p = prefix + path;
-  return /.\/$/.test(p) ? prefix : p;
-};
-
 // Detect async functions
 export const AsyncFunction: Function = (async () => {}).constructor;
 
@@ -175,8 +170,12 @@ export const hydrateDependency = (
   // Register handlers
   for (let i = 0, handlers = group[1]; i < handlers.length; i++) {
     const handler = handlers[i];
-    const pathTransform = concatPrefix(prefix, handler[1]);
-    compilerState[3](handler[2], handler[3], pathTransform, scope);
+    compilerState[3](
+      handler[2],
+      handler[3],
+      prefix + (handler[1] === '/' || prefix !== '' ? '' : handler[1]),
+      scope,
+    );
   }
 
   const childGroups = group[3];
@@ -290,7 +289,8 @@ export const compileGroup = (
     i++
   ) {
     const handler = handlers[i];
-    const pathTransform = concatPrefix(prefix, handler[1]);
+    const pathTransform =
+      prefix + (handler[1] === '/' || prefix !== '' ? '' : handler[1]);
 
     insertItem(
       compilerState[0],
