@@ -6,5 +6,4 @@ Features:
 - Customizable compilation
 
 Required dependencies:
-- `@mapl/router`
-- `safe-throw`
+- `@safe-std/error`

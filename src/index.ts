@@ -1,5 +1,8 @@
-import { type Router, insertItem } from '@mapl/router/method';
-import type { Err } from '@safe-std/error';
+import { isErr, type Err } from '@safe-std/error';
+import { injectExternalDependency } from 'runtime-compiler';
+import { isHydrating } from 'runtime-compiler/config';
+
+const IS_ERR = injectExternalDependency(isErr);
 
 /**
  * Describe a middleware function
@@ -92,44 +95,77 @@ export const createArgSet = (args: string[]): string[] => {
 // Detect async functions
 export const AsyncFunction: Function = (async () => {}).constructor;
 
-// Compiler state
-export const compilerState: [
-  router: Router<string>,
-  dependencies: any[],
-  contextInit: string,
+let hooks: {
   compileHandler: Hook<[handler: Handler[2], data: Handler[3], path: string]>,
   compileErrorHandler: Hook<ErrorHandler>,
-] = [, , , , ,] as any;
+  registerCompiled: (method: string, path: string, item: string) => any
+};
+export const setHooks = (allHooks: Partial<typeof hooks>): void => {
+  // @ts-ignore
+  hooks = allHooks;
+}
+
+// Init context
+let initContext = '';
+export const setContextInit = (init: string): void => {
+  initContext = init;
+}
+export const contextInit = (): string => initContext;
 
 // Utils
 export const compileErrorHandler = (scope: ScopeState): string =>
-  (scope[3] ??= compilerState[4](scope[2]![0], scope[2]![1], scope));
+  (scope[3] ??= hooks.compileErrorHandler(scope[2]![0], scope[2]![1], scope));
 export const clearErrorHandler = (scope: ScopeState): void => {
   scope[2] != null && (scope[3] = null);
 };
 
 export const createContext = (scope: ScopeState): string => {
-  if (scope[1]) return '';
+  if (isHydrating()) {
+    // Return empty string for hydration
+    if (!scope[1]) {
+      scope[1] = true;
+      clearErrorHandler(scope);
+    }
+    return '';
+  }
 
+  if (scope[1]) return '';
   scope[1] = true;
   clearErrorHandler(scope);
-  return compilerState[2];
+  return initContext;
 };
 
 export const createAsyncScope = (scope: ScopeState): string => {
-  if (scope[0]) return '';
+  if (isHydrating()) {
+    // Return empty string for hydration
+    if (!scope[0]) {
+      scope[0] = true;
+      clearErrorHandler(scope);
+    }
+    return '';
+  }
 
+  if (scope[0]) return '';
   scope[0] = true;
   clearErrorHandler(scope);
   return constants.ASYNC_START;
 };
 
 export const setTmp = (scope: ScopeState): string => {
+  if (isHydrating()) {
+    // Return empty string for hydration
+    scope[4] = true;
+    return '';
+  }
+
   if (scope[4]) return constants.TMP;
   scope[4] = true;
   return 'let ' + constants.TMP;
 };
 
+/**
+ * Required hooks: compileHandler, compileErrorHandler
+ */
 export const hydrateDependency = (
   group: Group,
   scope: ScopeState,
@@ -149,7 +185,7 @@ export const hydrateDependency = (
 
     if (id === -1) fn(scope);
     else {
-      compilerState[1].push(fn);
+      injectExternalDependency(fn);
       if (fn.length > 0) createContext(scope);
 
       // Wrap everything in async if necessary
@@ -170,7 +206,7 @@ export const hydrateDependency = (
   // Register handlers
   for (let i = 0, handlers = group[1]; i < handlers.length; i++) {
     const handler = handlers[i];
-    compilerState[3](
+    hooks.compileHandler(
       handler[2],
       handler[3],
       prefix + (handler[1] === '/' || prefix !== '' ? '' : handler[1]),
@@ -188,7 +224,9 @@ export const hydrateDependency = (
       );
 };
 
-// Main fn
+/**
+ * Required hooks: compileHandler, compileErrorHandler, registerCompiled
+ */
 export const compileGroup = (
   group: Group,
   scope: ScopeState,
@@ -213,7 +251,7 @@ export const compileGroup = (
     if (id === -1) content += fn(scope);
     else {
       // Analyze function args
-      let call = constants.DEP + compilerState[1].push(fn) + '(';
+      let call = injectExternalDependency(fn) + '(';
       if (fn.length > 0) {
         call += constants.CTX;
         content += createContext(scope);
@@ -248,7 +286,7 @@ export const compileGroup = (
           call +
           // Check error
           ';if(' +
-          constants.IS_ERR +
+          IS_ERR +
           '(' +
           constants.TMP +
           ')){' +
@@ -262,7 +300,7 @@ export const compileGroup = (
           call +
           // Check error
           ';if(' +
-          constants.IS_ERR +
+          IS_ERR +
           '(' +
           constants.TMP +
           ')){' +
@@ -292,16 +330,14 @@ export const compileGroup = (
     const pathTransform =
       prefix + (handler[1] === '/' || prefix !== '' ? '' : handler[1]);
 
-    insertItem(
-      compilerState[0],
-
+    hooks.registerCompiled(
       // Method and analyze path
       handler[0],
       pathTransform,
 
       // Compile a route
       content +
-        compilerState[3](handler[2], handler[3], pathTransform, scope) +
+        hooks.compileHandler(handler[2], handler[3], pathTransform, scope) +
         asyncEnd,
     );
   }

@@ -1,10 +1,5 @@
 export * from '@mapl/router/constants';
 
-export const MAPL = 'm';
-
-// Required dependencies
-export const IS_ERR: string = MAPL + 'e';
-
 /**
  * Start async scope
  */
