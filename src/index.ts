@@ -1,6 +1,5 @@
 import { isErr, type Err } from '@safe-std/error';
 import { injectExternalDependency } from 'runtime-compiler';
-import { isHydrating } from 'runtime-compiler/config';
 
 const IS_ERR = injectExternalDependency(isErr);
 
@@ -106,11 +105,10 @@ export const setHooks = (allHooks: Partial<typeof hooks>): void => {
 }
 
 // Init context
-let initContext = '';
+export let contextInit = '';
 export const setContextInit = (init: string): void => {
-  initContext = init;
+  contextInit = init;
 }
-export const contextInit = (): string => initContext;
 
 // Utils
 export const compileErrorHandler = (scope: ScopeState): string =>
@@ -120,31 +118,13 @@ export const clearErrorHandler = (scope: ScopeState): void => {
 };
 
 export const createContext = (scope: ScopeState): string => {
-  if (isHydrating()) {
-    // Return empty string for hydration
-    if (!scope[1]) {
-      scope[1] = true;
-      clearErrorHandler(scope);
-    }
-    return '';
-  }
-
   if (scope[1]) return '';
   scope[1] = true;
   clearErrorHandler(scope);
-  return initContext;
+  return contextInit;
 };
 
 export const createAsyncScope = (scope: ScopeState): string => {
-  if (isHydrating()) {
-    // Return empty string for hydration
-    if (!scope[0]) {
-      scope[0] = true;
-      clearErrorHandler(scope);
-    }
-    return '';
-  }
-
   if (scope[0]) return '';
   scope[0] = true;
   clearErrorHandler(scope);
@@ -152,12 +132,6 @@ export const createAsyncScope = (scope: ScopeState): string => {
 };
 
 export const setTmp = (scope: ScopeState): string => {
-  if (isHydrating()) {
-    // Return empty string for hydration
-    scope[4] = true;
-    return '';
-  }
-
   if (scope[4]) return constants.TMP;
   scope[4] = true;
   return 'let ' + constants.TMP;
