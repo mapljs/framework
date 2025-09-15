@@ -30,6 +30,6 @@
     "@biomejs/biome"
   ],
   "peerDependencies": {
-    "runtime-compiler": "^1.0.3"
+    "runtime-compiler": "^1.0.6"
   }
 }

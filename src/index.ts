@@ -1,5 +1,6 @@
 import { isErr, type Err } from '@safe-std/error';
 import { injectExternalDependency } from 'runtime-compiler';
+import { isHydrating } from 'runtime-compiler/config';
 
 const IS_ERR = injectExternalDependency(isErr);
 
@@ -87,7 +88,8 @@ export const createArgSet = (args: string[]): string[] => {
   const len = args.length;
   const arr = new Array(len + 1);
   arr[0] = '';
-  for (let i = 1; i <= len; i++) arr[i] = args.slice(0, i).join();
+  arr[1] = args[1];
+  for (let i = 1; i <= len; i++) arr[i] = arr[i - 1] + ',' + args[i];
   return arr;
 };
 
@@ -95,20 +97,20 @@ export const createArgSet = (args: string[]): string[] => {
 export const AsyncFunction: Function = (async () => {}).constructor;
 
 let hooks: {
-  compileHandler: Hook<[handler: Handler[2], data: Handler[3], path: string]>,
-  compileErrorHandler: Hook<ErrorHandler>,
-  registerCompiled: (method: string, path: string, item: string) => any
+  compileHandler: Hook<[handler: Handler[2], data: Handler[3], path: string]>;
+  compileErrorHandler: Hook<ErrorHandler>;
+  registerCompiled: (method: string, path: string, item: string) => any;
 };
 export const setHooks = (allHooks: Partial<typeof hooks>): void => {
   // @ts-ignore
   hooks = allHooks;
-}
+};
 
 // Init context
 export let contextInit = '';
 export const setContextInit = (init: string): void => {
   contextInit = init;
-}
+};
 
 // Utils
 export const compileErrorHandler = (scope: ScopeState): string =>
@@ -117,25 +119,46 @@ export const clearErrorHandler = (scope: ScopeState): void => {
   scope[2] != null && (scope[3] = null);
 };
 
-export const createContext = (scope: ScopeState): string => {
-  if (scope[1]) return '';
-  scope[1] = true;
-  clearErrorHandler(scope);
-  return contextInit;
-};
+export const createContext: (scope: ScopeState) => string = isHydrating
+  ? (scope) => {
+      if (!scope[1]) {
+        scope[1] = true;
+        clearErrorHandler(scope);
+      }
+      return '';
+    }
+  : (scope) => {
+      if (scope[1]) return '';
+      scope[1] = true;
+      clearErrorHandler(scope);
+      return contextInit;
+    };
 
-export const createAsyncScope = (scope: ScopeState): string => {
-  if (scope[0]) return '';
-  scope[0] = true;
-  clearErrorHandler(scope);
-  return constants.ASYNC_START;
-};
+export const createAsyncScope: (scope: ScopeState) => string = isHydrating
+  ? (scope) => {
+      if (!scope[0]) {
+        scope[0] = true;
+        clearErrorHandler(scope);
+      }
+      return '';
+    }
+  : (scope) => {
+      if (scope[0]) return '';
+      scope[0] = true;
+      clearErrorHandler(scope);
+      return constants.ASYNC_START;
+    };
 
-export const setTmp = (scope: ScopeState): string => {
-  if (scope[4]) return constants.TMP;
-  scope[4] = true;
-  return 'let ' + constants.TMP;
-};
+export const setTmp: (scope: ScopeState) => string = isHydrating
+  ? (scope) => {
+      scope[4] = true;
+      return '';
+    }
+  : (scope) => {
+      if (scope[4]) return constants.TMP;
+      scope[4] = true;
+      return 'let ' + constants.TMP;
+    };
 
 /**
  * Required hooks: compileHandler, compileErrorHandler

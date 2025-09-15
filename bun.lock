@@ -15,7 +15,7 @@
         "typescript": "^5.8.3",
       },
       "peerDependencies": {
-        "runtime-compiler": "^1.0.3",
+        "runtime-compiler": "^1.0.6",
       },
     },
   },
@@ -165,7 +165,7 @@
 
     "resolve-pkg-maps": ["resolve-pkg-maps@1.0.0", "", {}, "sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw=="],
 
-    "runtime-compiler": ["runtime-compiler@1.0.3", "", {}, "sha512-BZtX8dDTBA3piCnaY8N40kwKjjGTwpwck2bVlL+RmMgyS0iwscs5epCbuwpia6lwr7oTvo1BGN8YzHwO6uEOOQ=="],
+    "runtime-compiler": ["runtime-compiler@1.0.6", "", {}, "sha512-J44Hr6bf6hGQQLhQY0LmB+XqagVkpwdYr+OdPnZK9xlJ/62nKs5aqq8XBLreXeCffvauS2dB9bQH+MbWiUr4Gw=="],
 
     "tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
 
