@@ -64,9 +64,9 @@ export type Group<
 /**
  * Describe a hook
  */
-export type Hook<T extends any[]> = (
+export type Hook<T extends any[], R = string> = (
   ...args: [...data: T, scope: Readonly<ScopeState>]
-) => string;
+) => R;
 
 /**
  * This state doesn't change frequently
@@ -97,9 +97,11 @@ export const createArgSet = (args: string[]): string[] => {
 export const AsyncFunction: Function = (async () => {}).constructor;
 
 let hooks: {
-  compileHandler: Hook<[handler: Handler[2], data: Handler[3], path: string]>;
+  compileHandler: Hook<
+    [handler: Handler, prevContent: string, fullpath: string],
+    void
+  >;
   compileErrorHandler: Hook<[input: string, ...ErrorHandler]>;
-  registerCompiled: (method: string, path: string, item: string) => any;
 };
 export const setHooks = (allHooks: Partial<typeof hooks>): void => {
   // @ts-ignore
@@ -114,11 +116,15 @@ export const setContextInit = (init: string): void => {
 
 // Utils
 export const compileErrorHandler = (input: string, scope: ScopeState): string =>
-  (scope[3] ??= hooks.compileErrorHandler(input, scope[2]![0], scope[2]![1], scope));
+  (scope[3] ??= hooks.compileErrorHandler(
+    input,
+    scope[2]![0],
+    scope[2]![1],
+    scope,
+  ));
 export const clearErrorHandler = (scope: ScopeState): void => {
   scope[2] != null && (scope[3] = null);
 };
-export const wrapAsync = (str: string): string => constants.ASYNC_START + str + constants.ASYNC_END;
 
 export const createContext: (scope: ScopeState) => string = isHydrating
   ? (scope) => {
@@ -205,8 +211,8 @@ export const hydrateDependency = (
   for (let i = 0, handlers = group[1]; i < handlers.length; i++) {
     const handler = handlers[i];
     hooks.compileHandler(
-      handler[2],
-      handler[3],
+      handler,
+      '',
       prefix + (handler[1] === '/' || prefix !== '' ? '' : handler[1]),
       scope,
     );
@@ -317,26 +323,14 @@ export const compileGroup = (
   }
 
   // Register handlers
-  for (
-    let i = 0,
-      handlers = group[1],
-      asyncEnd = scope[0] ? constants.ASYNC_END : '';
-    i < handlers.length;
-    i++
-  ) {
+  for (let i = 0, handlers = group[1]; i < handlers.length; i++) {
     const handler = handlers[i];
-    const pathTransform =
-      prefix + (handler[1] === '/' || prefix !== '' ? '' : handler[1]);
-
-    hooks.registerCompiled(
-      // Method and analyze path
-      handler[0],
-      pathTransform,
-
-      // Compile a route
-      content +
-        hooks.compileHandler(handler[2], handler[3], pathTransform, scope) +
-        asyncEnd,
+    // Compile a route
+    hooks.compileHandler(
+      handler,
+      content,
+      prefix + (handler[1] === '/' || prefix !== '' ? '' : handler[1]),
+      scope,
     );
   }
 
