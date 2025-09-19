@@ -98,7 +98,7 @@ export const AsyncFunction: Function = (async () => {}).constructor;
 
 let hooks: {
   compileHandler: Hook<[handler: Handler[2], data: Handler[3], path: string]>;
-  compileErrorHandler: Hook<ErrorHandler>;
+  compileErrorHandler: Hook<[input: string, ...ErrorHandler]>;
   registerCompiled: (method: string, path: string, item: string) => any;
 };
 export const setHooks = (allHooks: Partial<typeof hooks>): void => {
@@ -113,8 +113,8 @@ export const setContextInit = (init: string): void => {
 };
 
 // Utils
-export const compileErrorHandler = (scope: ScopeState): string =>
-  (scope[3] ??= hooks.compileErrorHandler(scope[2]![0], scope[2]![1], scope));
+export const compileErrorHandler = (input: string, scope: ScopeState): string =>
+  (scope[3] ??= hooks.compileErrorHandler(input, scope[2]![0], scope[2]![1], scope));
 export const clearErrorHandler = (scope: ScopeState): void => {
   scope[2] != null && (scope[3] = null);
 };
@@ -192,10 +192,10 @@ export const hydrateDependency = (
       if (id === 1) createContext(scope);
       else if (id === 2) {
         setTmp(scope);
-        compileErrorHandler(scope);
+        compileErrorHandler(constants.TMP, scope);
       } else if (id === 3) {
         setTmp(scope);
-        compileErrorHandler(scope);
+        compileErrorHandler(constants.TMP, scope);
         createContext(scope);
       }
     }
@@ -288,7 +288,7 @@ export const compileGroup = (
           '(' +
           constants.TMP +
           ')){' +
-          compileErrorHandler(scope) +
+          compileErrorHandler(constants.TMP, scope) +
           '}';
       else if (id === 3) {
         content +=
@@ -302,7 +302,7 @@ export const compileGroup = (
           '(' +
           constants.TMP +
           ')){' +
-          compileErrorHandler(scope) +
+          compileErrorHandler(constants.TMP, scope) +
           '}' +
           // Assign to context variable
           createContext(scope) +

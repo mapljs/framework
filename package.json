@@ -1,6 +1,6 @@
 {
   "name": "@mapl/framework",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "A compiler framework",
   "repository": {
     "type": "git",
