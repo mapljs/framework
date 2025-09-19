@@ -118,6 +118,7 @@ export const compileErrorHandler = (scope: ScopeState): string =>
 export const clearErrorHandler = (scope: ScopeState): void => {
   scope[2] != null && (scope[3] = null);
 };
+export const wrapAsync = (str: string): string => constants.ASYNC_START + str + constants.ASYNC_END;
 
 export const createContext: (scope: ScopeState) => string = isHydrating
   ? (scope) => {
