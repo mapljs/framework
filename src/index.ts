@@ -170,7 +170,7 @@ export const setTmp: (scope: ScopeState) => string = isHydrating
     };
 
 export const setup = (): void => {
-  IS_ERR = injectExternalDependency(isErr);
+  IS_ERR ??= injectExternalDependency(isErr);
 }
 
 /**
@@ -181,6 +181,8 @@ export const hydrateDependency = (
   scope: ScopeState,
   prefix: string,
 ): void => {
+  setup();
+
   // Reset error handler when necessary
   if (group[2] != null) {
     scope[2] = group[2];
@@ -246,6 +248,8 @@ export const compileGroup = (
   // Previously built content
   content: string,
 ): void => {
+  setup();
+
   // Reset error handler when necessary
   if (group[2] != null) {
     scope[2] = group[2];
