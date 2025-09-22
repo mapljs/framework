@@ -1,8 +1,8 @@
 import { isErr, type Err } from '@safe-std/error';
-import { injectExternalDependency, injectPersistentDependency } from 'runtime-compiler';
+import { injectExternalDependency } from 'runtime-compiler';
 import { isHydrating } from 'runtime-compiler/config';
 
-const IS_ERR = injectPersistentDependency(isErr);
+export let IS_ERR: string;
 
 /**
  * Describe a middleware function
@@ -168,6 +168,10 @@ export const setTmp: (scope: ScopeState) => string = isHydrating
       scope[4] = true;
       return 'let ' + constants.TMP;
     };
+
+export const setup = (): void => {
+  IS_ERR = injectExternalDependency(isErr);
+}
 
 /**
  * Required hooks: compileHandler, compileErrorHandler

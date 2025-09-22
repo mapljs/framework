@@ -4,7 +4,7 @@
     "": {
       "name": "app-new",
       "dependencies": {
-        "runtime-compiler": "^1.0.12",
+        "runtime-compiler": "^1.2.0",
       },
       "devDependencies": {
         "@biomejs/biome": "^1.9.4",
@@ -165,7 +165,7 @@
 
     "resolve-pkg-maps": ["resolve-pkg-maps@1.0.0", "", {}, "sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw=="],
 
-    "runtime-compiler": ["runtime-compiler@1.0.12", "", {}, "sha512-bXjk8uZ0g/CnBUKBtI5Kp0b43FF8ofs7k5AhdpEcxT2RXyao/YTL9MK8oF9Zf73KgZ7PUjvEBxs6Em7MFNLqjA=="],
+    "runtime-compiler": ["runtime-compiler@1.2.0", "", {}, "sha512-uUjglXEus5/FZN3VUbm6pq0U9wJfRvvSkWsdEYX5hOPAiYENFdRZCW2ZPjXPmvzU1OiBK3jI1h60DVxT+0coNw=="],
 
     "tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
 
