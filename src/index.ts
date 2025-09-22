@@ -1,8 +1,8 @@
 import { isErr, type Err } from '@safe-std/error';
-import { injectExternalDependency } from 'runtime-compiler';
+import { injectExternalDependency, injectPersistentDependency } from 'runtime-compiler';
 import { isHydrating } from 'runtime-compiler/config';
 
-const IS_ERR = injectExternalDependency(isErr);
+const IS_ERR = injectPersistentDependency(isErr);
 
 /**
  * Describe a middleware function
