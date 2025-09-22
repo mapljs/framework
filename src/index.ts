@@ -1,8 +1,8 @@
 import { isErr, type Err } from '@safe-std/error';
-import { injectExternalDependency } from 'runtime-compiler';
+import { injectExternalDependency, lazyDependency } from 'runtime-compiler';
 import { isHydrating } from 'runtime-compiler/config';
 
-export let IS_ERR: string;
+export const IS_ERR_FN: () => string = lazyDependency(injectExternalDependency, isErr);
 
 /**
  * Describe a middleware function
@@ -169,10 +169,6 @@ export const setTmp: (scope: ScopeState) => string = isHydrating
       return 'let ' + constants.TMP;
     };
 
-export const setup = (): void => {
-  IS_ERR ??= injectExternalDependency(isErr);
-}
-
 /**
  * Required hooks: compileHandler, compileErrorHandler
  */
@@ -181,8 +177,6 @@ export const hydrateDependency = (
   scope: ScopeState,
   prefix: string,
 ): void => {
-  setup();
-
   // Reset error handler when necessary
   if (group[2] != null) {
     scope[2] = group[2];
@@ -206,9 +200,11 @@ export const hydrateDependency = (
       if (id === 1) createContext(scope);
       else if (id === 2) {
         setTmp(scope);
+        IS_ERR_FN();
         compileErrorHandler(constants.TMP, scope);
       } else if (id === 3) {
         setTmp(scope);
+        IS_ERR_FN();
         compileErrorHandler(constants.TMP, scope);
         createContext(scope);
       }
@@ -248,8 +244,6 @@ export const compileGroup = (
   // Previously built content
   content: string,
 ): void => {
-  setup();
-
   // Reset error handler when necessary
   if (group[2] != null) {
     scope[2] = group[2];
@@ -300,7 +294,7 @@ export const compileGroup = (
           call +
           // Check error
           ';if(' +
-          IS_ERR +
+          IS_ERR_FN() +
           '(' +
           constants.TMP +
           ')){' +
@@ -314,7 +308,7 @@ export const compileGroup = (
           call +
           // Check error
           ';if(' +
-          IS_ERR +
+          IS_ERR_FN() +
           '(' +
           constants.TMP +
           ')){' +

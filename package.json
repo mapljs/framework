@@ -1,6 +1,6 @@
 {
   "name": "@mapl/framework",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "A compiler framework",
   "repository": {
     "type": "git",
@@ -30,6 +30,6 @@
     "@biomejs/biome"
   ],
   "peerDependencies": {
-    "runtime-compiler": "^1.2.0"
+    "runtime-compiler": "^1.2.2"
   }
 }
