@@ -1,6 +1,6 @@
 {
   "name": "@mapl/framework",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "A compiler framework",
   "repository": {
     "type": "git",
@@ -24,12 +24,10 @@
     "oxc-minify": "^0.64.0",
     "oxc-transform": "^0.65.0",
     "tsx": "^4.20.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "runtime-compiler": "^1.2.5"
   },
   "trustedDependencies": [
     "@biomejs/biome"
-  ],
-  "peerDependencies": {
-    "runtime-compiler": "^1.2.2"
-  }
+  ]
 }

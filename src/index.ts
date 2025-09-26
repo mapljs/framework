@@ -96,19 +96,13 @@ export const createArgSet = (args: string[]): string[] => {
 // Detect async functions
 export const AsyncFunction: Function = (async () => {}).constructor;
 
-// Compile a handler (need to close async scope)
-export let compileHandlerHook: Hook<
-  [handler: Handler, prevContent: string, fullpath: string],
-  void
->;
-export const setCompileHandlerHook = (fn: typeof compileHandlerHook): void => {
-  compileHandlerHook = fn;
-}
-
-export let compileErrorHandlerHook: Hook<[input: string, ...ErrorHandler]>;
-export const setCompileErrorHandlerHook = (fn: typeof compileErrorHandlerHook): void => {
-  compileErrorHandlerHook = fn;
-}
+export const hooks: {
+  compileHandler: Hook<
+    [handler: Handler, prevContent: string, fullpath: string],
+    void
+  >;
+  compileErrorHandler: Hook<[input: string, ...ErrorHandler]>;
+} = {} as any;
 
 // Init context
 export let contextInit = '';
@@ -118,7 +112,7 @@ export const setContextInit = (init: string): void => {
 
 // Utils
 export const compileErrorHandler = (input: string, scope: ScopeState): string =>
-  (scope[3] ??= compileErrorHandlerHook(
+  (scope[3] ??= hooks.compileErrorHandler(
     input,
     scope[2]![0],
     scope[2]![1],
@@ -214,7 +208,7 @@ export const hydrateDependency = (
   // Register handlers
   for (let i = 0, handlers = group[1]; i < handlers.length; i++) {
     const handler = handlers[i];
-    compileHandlerHook(
+    hooks.compileHandler(
       handler,
       '',
       prefix + (handler[1] === '/' || prefix !== '' ? '' : handler[1]),
@@ -330,7 +324,7 @@ export const compileGroup = (
   for (let i = 0, handlers = group[1]; i < handlers.length; i++) {
     const handler = handlers[i];
     // Compile a route
-    compileHandlerHook(
+    hooks.compileHandler(
       handler,
       content,
       prefix + (handler[1] === '/' || prefix !== '' ? '' : handler[1]),
