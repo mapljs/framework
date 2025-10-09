@@ -115,7 +115,7 @@ export const setContextInit = (init: string): void => {
 };
 
 // Error compiler
-const compileErrorHandler = (input: string, scope: ScopeState): string =>
+export const compileErrorHandler = (input: string, scope: ScopeState): string =>
   (scope[3] ??= hooks.compileErrorHandler(
     input,
     scope[2]![0],
