@@ -1,8 +1,14 @@
 import { isErr, type Err } from '@safe-std/error';
-import { injectExternalDependency, lazyDependency } from 'runtime-compiler';
+import {
+  injectExternalDependency,
+  lazyDependency
+} from 'runtime-compiler';
 import { isHydrating } from 'runtime-compiler/config';
 
-export const IS_ERR_FN: () => string = lazyDependency(injectExternalDependency, isErr);
+export const IS_ERR_FN: () => string = lazyDependency(
+  injectExternalDependency,
+  isErr,
+);
 
 /**
  * Describe a middleware function
@@ -110,8 +116,8 @@ export const setContextInit = (init: string): void => {
   contextInit = init;
 };
 
-// Utils
-export const compileErrorHandler = (input: string, scope: ScopeState): string =>
+// Error compiler
+const _compileErrorHandler = (input: string, scope: ScopeState): string =>
   (scope[3] ??= hooks.compileErrorHandler(
     input,
     scope[2]![0],
@@ -121,7 +127,16 @@ export const compileErrorHandler = (input: string, scope: ScopeState): string =>
 export const clearErrorHandler = (scope: ScopeState): void => {
   scope[2] != null && (scope[3] = null);
 };
+export const checkError = (scope: ScopeState, value: string): string =>
+  'if(' +
+  IS_ERR_FN() +
+  '(' +
+  value +
+  ')){' +
+  _compileErrorHandler(value, scope) +
+  '}';
 
+// Context creation
 export const createContext: (scope: ScopeState) => string = isHydrating
   ? (scope) => {
       if (!scope[1]) {
@@ -136,6 +151,8 @@ export const createContext: (scope: ScopeState) => string = isHydrating
       clearErrorHandler(scope);
       return contextInit;
     };
+export const setContextProp = (prop: string, val: string): string =>
+  constants.CTX + '.' + prop + '=' + val + ';';
 
 export const createAsyncScope: (scope: ScopeState) => string = isHydrating
   ? (scope) => {
@@ -152,16 +169,15 @@ export const createAsyncScope: (scope: ScopeState) => string = isHydrating
       return constants.ASYNC_START;
     };
 
-export const setTmp: (scope: ScopeState) => string = isHydrating
-  ? (scope) => {
-      scope[4] = true;
-      return '';
-    }
-  : (scope) => {
-      if (scope[4]) return constants.TMP;
-      scope[4] = true;
-      return 'let ' + constants.TMP;
-    };
+// Temporary values
+export const createTmp = (scope: ScopeState): void => {
+  scope[4] = true;
+};
+export const setTmpValue = (scope: ScopeState, value: string): string => {
+  if (scope[4]) return constants.TMP + '=' + value + ';';
+  scope[4] = true;
+  return 'let ' + constants.TMP + '=' + value + ';';
+};
 
 /**
  * Required hooks: compileHandler, compileErrorHandler
@@ -193,13 +209,13 @@ export const hydrateDependency = (
 
       if (id === 1) createContext(scope);
       else if (id === 2) {
-        setTmp(scope);
+        createTmp(scope);
         IS_ERR_FN();
-        compileErrorHandler(constants.TMP, scope);
+        _compileErrorHandler(constants.TMP, scope);
       } else if (id === 3) {
-        setTmp(scope);
+        createTmp(scope);
         IS_ERR_FN();
-        compileErrorHandler(constants.TMP, scope);
+        _compileErrorHandler(constants.TMP, scope);
         createContext(scope);
       }
     }
@@ -271,51 +287,16 @@ export const compileGroup = (
         content += call + ';';
       else if (id === 1)
         // Assign to context variable
-        content +=
-          createContext(scope) +
-          constants.CTX +
-          '.' +
-          middleware[2] +
-          '=' +
-          call +
-          ';';
+        content += createContext(scope) + setContextProp(middleware[2], call);
       else if (id === 2)
         // Check directly instead of creating temporary variables
-        content +=
-          // Create temporary variable
-          setTmp(scope) +
-          '=' +
-          call +
-          // Check error
-          ';if(' +
-          IS_ERR_FN() +
-          '(' +
-          constants.TMP +
-          ')){' +
-          compileErrorHandler(constants.TMP, scope) +
-          '}';
+        content += setTmpValue(scope, call) + checkError(scope, constants.TMP);
       else if (id === 3) {
         content +=
-          // Create temporary variable
-          setTmp(scope) +
-          '=' +
-          call +
-          // Check error
-          ';if(' +
-          IS_ERR_FN() +
-          '(' +
-          constants.TMP +
-          ')){' +
-          compileErrorHandler(constants.TMP, scope) +
-          '}' +
-          // Assign to context variable
+          setTmpValue(scope, call) +
+          checkError(scope, constants.TMP) +
           createContext(scope) +
-          constants.CTX +
-          '.' +
-          middleware[2] +
-          '=' +
-          constants.TMP +
-          ';';
+          setContextProp(middleware[2], constants.TMP);
       }
     }
   }
