@@ -1,7 +1,8 @@
 import { isErr, type Err } from '@safe-std/error';
 import {
   injectExternalDependency,
-  lazyDependency
+  lazyDependency,
+  AsyncFunction
 } from 'runtime-compiler';
 import { isHydrating } from 'runtime-compiler/config';
 
@@ -99,9 +100,6 @@ export const createArgSet = (args: string[]): string[] => {
   return arr;
 };
 
-// Detect async functions
-export const AsyncFunction: Function = (async () => {}).constructor;
-
 export const hooks: {
   compileHandler: Hook<
     [handler: Handler, prevContent: string, fullpath: string],
@@ -117,7 +115,7 @@ export const setContextInit = (init: string): void => {
 };
 
 // Error compiler
-const _compileErrorHandler = (input: string, scope: ScopeState): string =>
+const compileErrorHandler = (input: string, scope: ScopeState): string =>
   (scope[3] ??= hooks.compileErrorHandler(
     input,
     scope[2]![0],
@@ -127,13 +125,13 @@ const _compileErrorHandler = (input: string, scope: ScopeState): string =>
 export const clearErrorHandler = (scope: ScopeState): void => {
   scope[2] != null && (scope[3] = null);
 };
-export const checkError = (scope: ScopeState, value: string): string =>
+export const compileErrorCheck = (scope: ScopeState, value: string): string =>
   'if(' +
   IS_ERR_FN() +
   '(' +
   value +
   ')){' +
-  _compileErrorHandler(value, scope) +
+  compileErrorHandler(value, scope) +
   '}';
 
 // Context creation
@@ -211,11 +209,11 @@ export const hydrateDependency = (
       else if (id === 2) {
         createTmp(scope);
         IS_ERR_FN();
-        _compileErrorHandler(constants.TMP, scope);
+        compileErrorHandler(constants.TMP, scope);
       } else if (id === 3) {
         createTmp(scope);
         IS_ERR_FN();
-        _compileErrorHandler(constants.TMP, scope);
+        compileErrorHandler(constants.TMP, scope);
         createContext(scope);
       }
     }
@@ -290,11 +288,11 @@ export const compileGroup = (
         content += createContext(scope) + setContextProp(middleware[2], call);
       else if (id === 2)
         // Check directly instead of creating temporary variables
-        content += setTmpValue(scope, call) + checkError(scope, constants.TMP);
+        content += setTmpValue(scope, call) + compileErrorCheck(scope, constants.TMP);
       else if (id === 3) {
         content +=
           setTmpValue(scope, call) +
-          checkError(scope, constants.TMP) +
+          compileErrorCheck(scope, constants.TMP) +
           createContext(scope) +
           setContextProp(middleware[2], constants.TMP);
       }
