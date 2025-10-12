@@ -91,14 +91,16 @@ export type ScopeState = [
  */
 export type ContextInit<T = unknown> = (headers: [string, string][]) => T;
 
-export const createArgSet = (args: string[]): string[] => {
-  const len = args.length;
-  const arr = new Array(len + 1);
-  arr[0] = '';
-  arr[1] = args[1];
-  for (let i = 2; i <= len; i++) arr[i] = arr[i - 1] + ',' + args[i];
-  return arr;
-};
+const paramsCache: string[] = [''];
+
+export const getParamArgs = (len: number): string => {
+  while (len >= paramsCache.length) {
+    const idx = paramsCache.length;
+    paramsCache.push(paramsCache[idx - 1] + constants.PARAMS + idx + ',');
+  }
+
+  return paramsCache[len];
+}
 
 export const hooks: {
   compileHandler: Hook<
