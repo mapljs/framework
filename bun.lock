@@ -5,7 +5,7 @@
       "name": "app-new",
       "devDependencies": {
         "@biomejs/biome": "^1.9.4",
-        "@mapl/router": "^0.6.2",
+        "@mapl/router": "^0.7.1",
         "@safe-std/error": "^1.0.1",
         "@types/bun": "^1.2.10",
         "mitata": "^1.0.34",
@@ -95,7 +95,7 @@
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.25.1", "", { "os": "win32", "cpu": "x64" }, "sha512-Y1EQdcfwMSeQN/ujR5VayLOJ1BHaK+ssyk0AEzPjC+t1lITgsnccPqFjb6V+LsTp/9Iov4ysfjxLaGJ9RPtkVg=="],
 
-    "@mapl/router": ["@mapl/router@0.6.2", "", {}, "sha512-qzGQnuVeapwNZxRcAH9zB4+cr3Q1AOLHjyhqeMVBfeJB6lYly2LHf7UsNEnT4KX4/KcxdNK7Te3ka/s327tmow=="],
+    "@mapl/router": ["@mapl/router@0.7.1", "", {}, "sha512-TxjD9tWWmt41UH21bZz/5vYKieFnLB1Ho5ird7d/feHsUkvki3nAV75hCAEIDJALTwnpEa2jHDjhl22l6+0MuA=="],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@0.2.11", "", { "dependencies": { "@emnapi/core": "^1.4.3", "@emnapi/runtime": "^1.4.3", "@tybys/wasm-util": "^0.9.0" } }, "sha512-9DPkXtvHydrcOsopiYpUgPHpmj0HWZKMUnL2dZqpvC42lsratuBG06V5ipyno0fUek5VlFsNQ+AcFATSrJXgMA=="],
 

@@ -4,7 +4,6 @@ import { transform } from 'oxc-transform';
 
 import pkg from '../package.json';
 import { cp, LIB, ROOT, SOURCE } from './utils.js';
-import * as constants from '../src/constants.js';
 import { minify } from 'oxc-minify';
 
 // Remove old content
@@ -12,12 +11,6 @@ if (existsSync(LIB)) rmSync(LIB, { recursive: true });
 
 // @ts-ignore
 const exports = (pkg.exports = {} as Record<string, string>);
-const defs = Object.fromEntries(
-  Object.entries(constants).map((entry) => [
-    `constants.${entry[0]}`,
-    JSON.stringify(entry[1]),
-  ]),
-);
 
 Array.fromAsync(new Bun.Glob('**/*.ts').scan(SOURCE))
   .then((paths) =>
@@ -35,8 +28,7 @@ Array.fromAsync(new Bun.Glob('**/*.ts').scan(SOURCE))
                 stripInternal: true,
               },
             },
-            lang: 'ts',
-            define: defs,
+            lang: 'ts'
           },
         );
 
