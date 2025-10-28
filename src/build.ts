@@ -1,5 +1,5 @@
 import type { Router } from './index.js';
-import { registerHandler } from './hook.js';
+import { registerHandler } from './hooks.js';
 
 /**
  * Use in `default` and `build` mode
