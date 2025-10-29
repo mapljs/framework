@@ -28,7 +28,7 @@ Array.fromAsync(new Bun.Glob('**/*.ts').scan(SOURCE))
                 stripInternal: true,
               },
             },
-            lang: 'ts'
+            lang: 'ts',
           },
         );
 

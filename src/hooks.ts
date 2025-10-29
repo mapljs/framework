@@ -1,7 +1,9 @@
+import type { ScopeState } from './index.js';
+
 /**
  * Register handler hook. Only called in `default` and `build` mode.
  */
-export let registerHandler: <ScopeState extends any[]>(
+export let registerHandler: (
   method: string,
   path: string,
   handler: string,

@@ -1,13 +1,14 @@
-export type Macro<ScopeState extends any[]> =
-  | string
-  | ((scope: ScopeState) => string);
+export type Macro = string | ((state: ScopeState) => string);
 
-export type Router<ScopeState extends any[]> = [
-  layers: Macro<ScopeState>[],
-  routes: [
-    method: string,
-    path: string,
-    ...layers: [...Macro<ScopeState>[], Macro<ScopeState>],
-  ][],
-  children?: Record<string, Router<ScopeState>>,
+export type Router = [
+  layers: Macro[],
+  routes: [method: string, path: string, ...layers: Macro[]][],
+  children?: Record<string, Router>,
 ];
+
+export interface ScopeState {
+  /**
+   * Fork the current state
+   */
+  slice: () => ScopeState;
+}

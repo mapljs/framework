@@ -1,11 +1,11 @@
-import type { Router } from './index.js';
-import { registerHandler } from './hooks.js';
+import type { Router, ScopeState } from '../index.js';
+import { registerHandler } from '../hooks.js';
 
 /**
  * Use in `default` and `build` mode
  */
-const build = <ScopeState extends any[]>(
-  router: Router<ScopeState>,
+const build = (
+  router: Router,
   state: ScopeState,
   pathPrefix: string,
   content: string,
@@ -18,8 +18,8 @@ const build = <ScopeState extends any[]>(
   for (let i = 0, routes = router[1]; i < routes.length; i++) {
     const route = routes[i];
 
+    const routeState = state.slice();
     let routeContent = content;
-    const routeState = state.slice() as ScopeState;
 
     for (let i = 2; i < route.length; i++) {
       const layer = route[i];
@@ -37,7 +37,7 @@ const build = <ScopeState extends any[]>(
       for (const childPath in children)
         build(
           children[childPath],
-          state.slice() as ScopeState,
+          state.slice(),
           childPath === '/' ? '' : childPath,
           content,
         );
@@ -45,7 +45,7 @@ const build = <ScopeState extends any[]>(
       for (const childPath in children)
         build(
           children[childPath],
-          state.slice() as ScopeState,
+          state.slice(),
           pathPrefix + childPath,
           content,
         );
