@@ -10,5 +10,5 @@ export interface ScopeState {
   /**
    * Fork the current state
    */
-  slice: () => ScopeState;
+  slice: () => this;
 }
