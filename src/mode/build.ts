@@ -5,7 +5,7 @@ import { registerHandler } from '../hooks.js';
  * Use in `default` and `build` mode
  */
 const build = (
-  router: Router,
+  router: Router<any, any>,
   state: ScopeState,
   pathPrefix: string,
   content: string,
@@ -21,12 +21,12 @@ const build = (
     const routeState = state.slice();
     let routeContent = content;
 
-    for (let i = 2; i < route.length; i++) {
+    for (let i = 3; i < route.length; i++) {
       const layer = route[i];
       routeContent += typeof layer === 'string' ? layer : layer(routeState);
     }
 
-    registerHandler(route[0], pathPrefix + route[1], routeContent, routeState);
+    registerHandler(route[0], pathPrefix + route[1], route[2], routeContent, routeState);
   }
 
   if (router[2] != null) {

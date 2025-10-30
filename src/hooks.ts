@@ -1,13 +1,14 @@
-import type { ScopeState } from './index.js';
+import type { ScopeState } from './index.ts';
 
 /**
  * Register handler hook. Only called in `default` and `build` mode.
  */
-export let registerHandler: (
+export let registerHandler: <State extends ScopeState>(
   method: string,
   path: string,
-  handler: string,
-  state: ScopeState,
+  handler: any,
+  content: string,
+  state: State,
 ) => any;
 export const onRegisterHandler = (f: typeof registerHandler): void => {
   registerHandler = f;
