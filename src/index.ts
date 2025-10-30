@@ -1,9 +1,9 @@
-export type Macro = string | ((state: ScopeState) => string);
+export type Macro<State extends ScopeState> = string | ((state: State) => string);
 
-export type Router = [
-  layers: Macro[],
-  routes: [method: string, path: string, ...layers: Macro[]][],
-  children?: Record<string, Router>,
+export type Router<State extends ScopeState> = [
+  layers: Macro<State>[],
+  routes: [method: string, path: string, ...layers: Macro<State>[]][],
+  children?: Record<string, Router<State>>,
 ];
 
 export interface ScopeState {
