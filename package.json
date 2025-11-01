@@ -1,6 +1,6 @@
 {
   "name": "@mapl/framework",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A compiler framework",
   "repository": {
     "type": "git",
@@ -17,7 +17,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@mapl/router": "^0.7.1",
     "@safe-std/error": "^1.0.1",
     "@types/bun": "^1.2.10",
     "mitata": "^1.0.34",
@@ -29,5 +28,8 @@
   },
   "trustedDependencies": [
     "@biomejs/biome"
-  ]
+  ],
+  "dependencies": {
+    "@mapl/router": "^0.7.4"
+  }
 }

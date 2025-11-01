@@ -1,13 +1,16 @@
-import type { Router, ScopeState } from '../index.js';
+import type { Macro, Router, ScopeState } from '../index.js';
 import { registerHandler } from '../hooks.js';
+
+import { countParams } from '@mapl/router/utils';
 
 /**
  * Use in `default` and `build` mode
  */
 const build = (
-  router: Router<any, any>,
+  router: Router<any>,
   state: ScopeState,
   pathPrefix: string,
+  paramCount: number,
   content: string,
 ): void => {
   for (let i = 0, layers = router[0]; i < layers.length; i++) {
@@ -15,18 +18,25 @@ const build = (
     content += typeof layer === 'string' ? layer : layer(state);
   }
 
-  for (let i = 0, routes = router[1]; i < routes.length; i++) {
-    const route = routes[i];
+  const routes = router[1];
+  for (const childPath in routes) {
+    const methods = routes[childPath];
+    const childPathParams = paramCount + countParams(childPath);
 
-    const routeState = state.slice();
-    let routeContent = content;
+    for (const method in methods) {
+      const routeState = state.slice();
+      const handler = methods[method];
 
-    for (let i = 3; i < route.length; i++) {
-      const layer = route[i];
-      routeContent += typeof layer === 'string' ? layer : layer(routeState);
+      registerHandler(
+        method,
+        pathPrefix + childPath,
+        content +
+          (typeof handler === 'string'
+            ? handler
+            : handler(routeState, childPathParams)),
+        routeState,
+      );
     }
-
-    registerHandler(route[0], pathPrefix + route[1], route[2], routeContent, routeState);
   }
 
   if (router[2] != null) {
@@ -39,6 +49,7 @@ const build = (
           children[childPath],
           state.slice(),
           childPath === '/' ? '' : childPath,
+          paramCount + countParams(childPath),
           content,
         );
     else
@@ -47,6 +58,7 @@ const build = (
           children[childPath],
           state.slice(),
           pathPrefix + childPath,
+          paramCount + countParams(childPath),
           content,
         );
   }

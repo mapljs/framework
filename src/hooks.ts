@@ -6,7 +6,6 @@ import type { ScopeState } from './index.ts';
 export let registerHandler: <State extends ScopeState>(
   method: string,
   path: string,
-  handler: any,
   content: string,
   state: State,
 ) => any;
