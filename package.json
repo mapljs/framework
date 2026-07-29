@@ -1,0 +1,34 @@
+{
+  "name": "framework",
+  "version": "0.0.1",
+  "description": "",
+  "keywords": [],
+  "homepage": "",
+  "license": "MIT",
+  "repository": "",
+  "type": "module",
+  "scripts": {
+    "task": "bun scripts/task.ts",
+    "fmt": "oxfmt",
+    "bench:node": "node --expose-gc --allow-natives-syntax",
+    "bench:deno": "deno run --allow-all --v8-flags=--expose-gc,--allow-natives-syntax"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.15.46",
+    "@types/bun": "^1.3.14",
+    "@types/deno": "^2.7.0",
+    "@types/node": "^26.1.1",
+    "chokidar": "^5.0.0",
+    "measure-loop": "^0.4.0",
+    "oxc-transform": "^0.137.0",
+    "oxfmt": "^0.56.0",
+    "picocolors": "^1.1.1",
+    "typescript": "^7.0.2"
+  },
+  "trustedDependencies": [
+    "@swc/core"
+  ],
+  "dependencies": {
+    "@mapl/pattern-router": "^0.0.1"
+  }
+}
