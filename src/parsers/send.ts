@@ -2,7 +2,7 @@ export interface JsonResponse<T extends {}> extends Response {
   readonly json: <R extends T = T>() => Promise<R>;
 }
 
-export default class send {
+export class Send {
   status: number;
   headers: Headers;
   statusText?: string;
@@ -37,7 +37,12 @@ export default class send {
 
   // Implement parser interface
   static name: 'send' = 'send';
-  static init(): send {
-    return new send();
+  static init(): Send {
+    return new Send();
   }
 }
+
+export default {
+  name: 'send',
+  init: (): Send => new Send(),
+} as const;
