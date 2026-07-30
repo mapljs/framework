@@ -48,15 +48,17 @@ export const route = <
   Pattern extends string,
   Method extends string,
   const R extends Response | Promise<Response>,
+  // Inferred
+  PatternContext extends {} = InferContextParams<BaseContext, Pattern>,
 >(
   method: Method,
   pattern: Pattern,
-  fn: (c: InferContextParams<BaseContext, Pattern>) => R,
+  fn: (c: PatternContext) => R,
 ): {
   readonly '~route': Cotravariant<BaseContext>;
   readonly pattern: Pattern;
   readonly method: Method;
-  readonly fn: (c: InferContextParams<BaseContext, Pattern>) => R;
+  readonly fn: (c: PatternContext) => R;
 } => ({ pattern, method, fn }) as any;
 
 // Example
