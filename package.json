@@ -1,7 +1,7 @@
 {
-  "name": "framework",
-  "version": "0.0.1",
-  "description": "",
+  "name": "@mapl/framework",
+  "version": "1.0.0",
+  "description": "A fast runtime-agnostic framework",
   "keywords": [],
   "homepage": "",
   "license": "MIT",

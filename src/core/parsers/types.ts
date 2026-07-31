@@ -3,7 +3,7 @@ import type { ObjectUnionToIntersect } from '../utils/types.ts';
 export interface Parser<
   in Context extends {},
   in out Value = unknown,
-  out Key extends string = string,
+  out Key extends string | undefined = string | undefined,
 > {
   readonly name?: Key;
   readonly init: (c: Context) => Value;
