@@ -29,6 +29,7 @@
     "@swc/core"
   ],
   "dependencies": {
-    "@mapl/pattern-router": "^0.0.1"
+    "@mapl/pattern-router": "^0.0.1",
+    "runtime-compiler": "^4.2.2"
   }
 }

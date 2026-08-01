@@ -1,7 +1,5 @@
 import type { InferParsers, Parser } from './parsers/types.ts';
 import type { InferContextParams, RequireContext } from './types.ts';
-import type { Evaluate } from './utils/types.ts';
-
 export type RouteRegister<
   RouteMethod extends string,
   BaseContext extends {},
@@ -102,7 +100,7 @@ export type RouterInit<BaseContext extends {}> = <
 >(
   parsers: Parsers,
   pattern?: Pattern,
-) => Router<BaseContext, Evaluate<InferParsers<PatternContext, Parsers>>, Pattern, Parsers, [], []>;
+) => Router<BaseContext, InferParsers<PatternContext, Parsers>, Pattern, Parsers, [], []>;
 
 interface RouterUntyped extends RequireContext<any> {}
 const routeUntyped = (method: any, pattern: any, fn: any, meta: any) => ({
@@ -114,8 +112,8 @@ const routeUntyped = (method: any, pattern: any, fn: any, meta: any) => ({
 class RouterUntyped {
   pattern: any;
   parsers: any;
-  routes: any;
-  routers: any;
+  routes: any[];
+  routers: any[];
 
   constructor(pattern: any, parsers: any) {
     this.pattern = pattern;
@@ -163,7 +161,6 @@ class RouterUntyped {
     return this;
   }
 }
-export const initUntyped = (parsers: any, pattern: any): RouterUntyped =>
-  new RouterUntyped(pattern, parsers);
+export const initUntyped = (parsers: any, pattern: any): any => new RouterUntyped(pattern, parsers);
 
 export default <BaseContext extends {}>(): RouterInit<BaseContext> => initUntyped as any;
