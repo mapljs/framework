@@ -4,10 +4,12 @@ export interface Parser<
   in Context extends {},
   in out Value = unknown,
   out Key extends string | undefined = string | undefined,
+  out Meta = unknown,
 > {
   readonly name?: Key;
   readonly init: (c: Context) => Value;
   readonly deinit?: (value: Awaited<Value>, c: Context) => any;
+  readonly meta?: Meta;
 }
 
 export type InferParser<T extends Parser<any>> = {
