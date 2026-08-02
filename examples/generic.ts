@@ -1,11 +1,11 @@
-import { router, parsers } from '@mapl/framework';
+import { router } from '@mapl/framework';
 import jit from '@mapl/framework/jit';
 
 // Cache response
 const errorResponse = new Response(null, { status: 500 });
 const api = router(
-  // attach response sender
-  [parsers.response],
+  // no parsers
+  [],
   // base path for all routes of this instance (optional)
   '/@:org',
 )
