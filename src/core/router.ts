@@ -1,9 +1,11 @@
-import type { InferParsers, Parser } from './parser/types.ts';
+import type { InferParsers, Parser } from './parser.ts';
 import type { InferContextParams, RequireContext } from './types.ts';
 
 export type RouteHandler<BaseContext extends {}, Pattern extends string> = (
   c: InferContextParams<BaseContext, Pattern>,
 ) => Response | Promise<Response>;
+
+export type RouterEvent = 'error' | 'beforeAll';
 
 export type RouterMethods<
   // Config
@@ -17,8 +19,8 @@ export type RouterMethods<
   Parsers extends any[],
   Routes extends any[],
   Routers extends any[],
-  Events extends {},
-> = {
+  Events extends Record<RouterEvent, any>,
+> = Events & {
   readonly [Name in keyof MethodsMap]: <
     RoutePattern extends string,
     const RouteFn extends RouteHandler<ParserContext, RoutePattern>,
@@ -86,7 +88,7 @@ export type RouterMethods<
     Events
   >;
 
-  readonly on: <K extends keyof EventsMap, Handler extends EventsMap[K]>(
+  readonly on: <K extends keyof EventsMap, const Handler extends EventsMap[K]>(
     event: K,
     handler: Handler,
   ) => Router<
@@ -103,6 +105,7 @@ export type RouterMethods<
   >;
 };
 
+// @ts-ignore
 export interface Router<
   in BaseContext extends {},
   in PatternContext extends {} = any,
@@ -112,7 +115,7 @@ export interface Router<
   in out Parsers extends any[] = any,
   in out Routes extends any[] = any,
   in out Routers extends any[] = any,
-  in out Events extends {} = any,
+  in out Events extends Record<RouterEvent, any> = Record<RouterEvent, any>,
 >
   extends
     RequireContext<BaseContext>,
@@ -129,6 +132,7 @@ export interface Router<
       },
       {
         error: (err: unknown, c: PatternContext) => Response | Promise<Response>;
+        beforeAll: (c: BaseContext) => any;
       },
       BaseContext,
       PatternContext,
@@ -143,7 +147,6 @@ export interface Router<
   readonly parsers: Parsers;
   readonly routes: Routes;
   readonly routers: Routers;
-  readonly events: Events;
 }
 
 export type RouterInit<BaseContext extends {}> = <
@@ -161,7 +164,7 @@ export type RouterInit<BaseContext extends {}> = <
   Parsers,
   [],
   [],
-  {}
+  Record<RouterEvent, any>
 >;
 
 interface RouterUntyped extends RequireContext<any> {}
@@ -171,21 +174,18 @@ const routeUntyped = (method: any, pattern: any, fn: any, meta: any) => ({
   fn,
   meta,
 });
+
 class RouterUntyped {
   pattern: any;
   parsers: any;
   routes: any[];
   routers: any[];
-  events: Record<string, any>;
 
   constructor(pattern: any, parsers: any) {
     this.pattern = pattern;
     this.parsers = parsers;
     this.routes = [];
     this.routers = [];
-    this.events = {
-      error: undefined,
-    };
   }
 
   route(method: any, pattern: any, fn: any, meta: any): this {
@@ -231,8 +231,10 @@ class RouterUntyped {
     return this;
   }
 
-  on(event: any, handler: any): this {
-    this.events[event] = handler;
+  error: any;
+  beforeAll: any;
+  on(event: RouterEvent, handler: any): this {
+    this[event] = handler;
     return this;
   }
 }

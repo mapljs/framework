@@ -29,3 +29,11 @@ export type InferParsers<
           }[Extract<keyof T, number>]
         >
     >;
+
+export const tap = <BaseContext extends {}, const R, const Meta = undefined>(
+  init: (c: BaseContext) => R,
+  meta: Meta,
+): {
+  init: (c: BaseContext) => R;
+  meta: Meta;
+} => ({ init, meta });

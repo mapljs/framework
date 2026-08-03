@@ -10,34 +10,15 @@ export interface RedirectedResponse extends Response {
 
 export interface AppendHeadersMap {
   vary:
-    | 'Origin'
-    | 'Accept'
-    | 'Accept-Encoding'
-    | 'Accept-Language'
-    | 'Accept-Charset'
-    | 'Access-Control-Request-Method'
-    | 'Access-Control-Request-Headers'
-    | 'TE'
-    | 'Accept-CH'
-    | 'Sec-CH-UA'
-    | 'Sec-CH-UA-Mobile'
-    | 'Sec-CH-UA-Platform'
-    | 'Sec-CH-UA-Arch'
-    | 'Sec-CH-UA-Bitness'
-    | 'Sec-CH-UA-Model'
-    | 'Sec-CH-UA-Full-Version'
-    | 'Sec-CH-UA-Full-Version-List'
-    | 'Sec-CH-Prefers-Color-Scheme'
-    | 'Sec-CH-Prefers-Reduced-Motion'
-    | 'Sec-CH-Viewport-Width'
-    | 'Viewport-Width'
-    | 'Width'
-    | 'DPR'
-    | 'Device-Memory'
-    | 'Sec-Fetch-Site'
-    | 'Sec-Fetch-Mode'
-    | 'Sec-Fetch-Dest'
-    | 'Authorization';
+    | 'origin'
+    | 'authorization'
+    | 'accept'
+    | 'accept-encoding'
+    | 'accept-language'
+    | 'accept-charset'
+    | 'access-control-request-method'
+    | 'access-control-request-headers';
+  'set-cookie': never;
 }
 export interface SetHeadersMap extends Omit<AppendHeadersMap, 'vary'> {
   vary: '*' | AppendHeadersMap['vary'];
@@ -93,13 +74,12 @@ export interface SetHeadersMap extends Omit<AppendHeadersMap, 'vary'> {
     | 'multipart/byteranges';
 }
 
-export class ResponseSender {
-  status: number;
+export class ResponseSender implements ResponseInit {
   headers: Headers;
+  status?: number;
   statusText?: string;
 
   constructor() {
-    this.status = 200;
     this.headers = new Headers();
   }
 

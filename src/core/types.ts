@@ -1,5 +1,5 @@
 import type { InferParams } from '@mapl/pattern-router/tree/utils';
-import type { Cotravariant, Evaluate } from './utils/types.ts';
+import type { Cotravariant, Evaluate } from '../utils/types.ts';
 
 export type InferContextParams<BaseContext extends {}, Pattern extends string> =
   {} extends InferParams<Pattern>

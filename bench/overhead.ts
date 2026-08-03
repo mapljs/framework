@@ -5,7 +5,7 @@ import { ResponseSender } from '@mapl/framework/core/response';
 export default run(
   import.meta,
   bench({
-    warmupIters: 32,
-    iters: 128,
+    warmupIters: 64,
+    iters: 512,
   }).it('c.res', [], () => new ResponseSender()),
 );

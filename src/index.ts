@@ -1,4 +1,7 @@
 export { default as requires } from './core/router.ts';
+export * as parser from './core/parser.ts';
+
+export * as cors from './utils/cors.ts';
 
 import type { ResponseSender } from './core/response.ts';
 import { initUntyped, type RouterInit } from './core/router.ts';
