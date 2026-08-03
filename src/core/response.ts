@@ -131,8 +131,8 @@ export class ResponseSender implements ResponseInit {
    * Send the body as HTML with attached `status`, `headers` and `statusText`.
    */
   html<const T extends BodyInit | null>(body: T): RawResponse<T> {
-    this.headers.set('content-type', 'text/html');
-    return new Response(body, this) as RawResponse<T>;
+    this.setHeader('content-type', 'text/html');
+    return this.body(body);
   }
 
   /**
@@ -140,15 +140,5 @@ export class ResponseSender implements ResponseInit {
    */
   json<const T extends {}>(obj: T): JsonResponse<T> {
     return Response.json(obj, this);
-  }
-
-  /**
-   * Send server events with attached `status`, `headers` and `statusText`.
-   */
-  events(body: ReadableStream): Response {
-    this.headers.set('content-type', 'text/event-stream');
-    this.headers.set('cache-control', 'no-cache');
-    this.headers.set('connection', 'keep-alive');
-    return new Response(body, this);
   }
 }
