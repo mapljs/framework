@@ -1,22 +1,22 @@
 /**
  * Allow credentials.
  */
-export const allowCredentials = (headers: Headers): void => {
-  headers.set('Access-Control-Allow-Credentials', 'true');
+export const allowCredentials = (res: { headers: Headers }): void => {
+  res.headers.set('Access-Control-Allow-Credentials', 'true');
 };
 
 /**
  * Allow this origin.
  */
-export const allowOrigin = (headers: Headers, origin: string): void => {
-  headers.set('access-control-allow-origin', origin);
+export const allowOrigin = (res: { headers: Headers }, origin: string): void => {
+  res.headers.set('access-control-allow-origin', origin);
 };
 
 /**
  * @param header Headers to expose, can be a single header or headers separated by comma.
  */
-export const exposeHeaders = (headers: Headers, header: string): void => {
-  headers.append('access-control-expose-headers', header);
+export const exposeHeaders = (res: { headers: Headers }, header: string): void => {
+  res.headers.append('access-control-expose-headers', header);
 };
 
 /**
@@ -24,8 +24,8 @@ export const exposeHeaders = (headers: Headers, header: string): void => {
  *
  * Use in **preflight** requests.
  */
-export const maxAge = (headers: Headers, age: number): void => {
-  headers.set('access-control-max-age', '' + age);
+export const maxAge = (res: { headers: Headers }, age: number): void => {
+  res.headers.set('access-control-max-age', '' + age);
 };
 
 /**
@@ -33,8 +33,8 @@ export const maxAge = (headers: Headers, age: number): void => {
  *
  * @param header Headers to allow, can be a single header or headers separated by comma.
  */
-export const allowHeaders = (headers: Headers, header: string): void => {
-  headers.append('access-control-allow-headers', header);
+export const allowHeaders = (res: { headers: Headers }, header: string): void => {
+  res.headers.append('access-control-allow-headers', header);
 };
 
 /**
@@ -42,8 +42,8 @@ export const allowHeaders = (headers: Headers, header: string): void => {
  *
  * @param method Methods to allow, can be a single method or methods separated by comma.
  */
-export const allowMethods = (headers: Headers, method: string): void => {
-  headers.append('access-control-allow-methods', method);
+export const allowMethods = (res: { headers: Headers }, method: string): void => {
+  res.headers.append('access-control-allow-methods', method);
 };
 
 /**
@@ -51,7 +51,7 @@ export const allowMethods = (headers: Headers, method: string): void => {
  *
  * Use in **preflight** requests.
  */
-export const allowRequestedHeaders = (headers: Headers, req: Request): void => {
+export const allowRequestedHeaders = (res: { headers: Headers }, req: Request): void => {
   const requestedHeaders = req.headers.get('access-control-request-headers');
-  requestedHeaders !== null && allowHeaders(headers, requestedHeaders);
+  requestedHeaders !== null && res.headers.append('access-control-allow-headers', requestedHeaders);
 };

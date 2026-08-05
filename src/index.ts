@@ -4,11 +4,11 @@ export * as parser from './core/parser.ts';
 export * as sse from './utils/sse.ts';
 export * as cors from './utils/cors.ts';
 
-import type { ResponseSender } from './core/response.ts';
+import type { ResponseInfo } from './core/response.ts';
 import { initUntyped, type RouterInit } from './core/router.ts';
 
 export interface BaseContext {
   req: Request;
-  res: ResponseSender;
+  res: ResponseInfo;
 }
 export const router: RouterInit<BaseContext> = initUntyped;

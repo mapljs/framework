@@ -74,7 +74,7 @@ export interface SetHeadersMap extends Omit<AppendHeadersMap, 'vary'> {
     | 'multipart/byteranges';
 }
 
-export class ResponseSender implements ResponseInit {
+export class ResponseInfo implements ResponseInit {
   headers: Headers;
   status?: number;
   statusText?: string;
@@ -131,8 +131,8 @@ export class ResponseSender implements ResponseInit {
    * Send the body as HTML with attached `status`, `headers` and `statusText`.
    */
   html<const T extends BodyInit | null>(body: T): RawResponse<T> {
-    this.setHeader('content-type', 'text/html');
-    return this.body(body);
+    this.headers.set('content-type', 'text/html');
+    return new Response(body, this) as RawResponse<T>;
   }
 
   /**

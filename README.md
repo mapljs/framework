@@ -15,7 +15,7 @@ const api = router(
     '/:pkg',
     // inferred context as { res: ResponseSender, params: { org: string, pkg: string } }
     ({ res, params }) => {
-      res.headers.set('Powered-By', 'mapl');
+      res.headers.set('x-powered-by', 'mapl');
       return res.body(`package: @${params.org}/${params.pkg}`);
     },
   )
