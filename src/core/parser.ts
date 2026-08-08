@@ -8,7 +8,15 @@ export interface Parser<
 > {
   readonly name?: Key;
   readonly init: (c: Context) => Value;
-  readonly deinit?: (value: Awaited<Value>, c: Context) => any;
+  readonly deinit?: (
+    c: Key extends string
+      ? Evaluate<
+          Context & {
+            [K in Key]: Value;
+          }
+        >
+      : Context,
+  ) => any;
   readonly meta?: Meta;
 }
 

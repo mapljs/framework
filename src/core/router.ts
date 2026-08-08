@@ -5,7 +5,7 @@ export type RouteHandler<BaseContext extends {}, Pattern extends string> = (
   c: InferContextParams<BaseContext, Pattern>,
 ) => Response | Promise<Response>;
 
-export type RouterEvent = 'error' | 'beforeAll';
+export type RouterEvent = 'error' | 'beforeParse' | 'afterParse';
 
 export type RouterMethods<
   // Config
@@ -20,7 +20,7 @@ export type RouterMethods<
   Routes extends any[],
   Routers extends any[],
   Events extends Record<RouterEvent, any>,
-> = Events & {
+> = {
   readonly [Name in keyof MethodsMap]: <
     RoutePattern extends string,
     const RouteFn extends RouteHandler<ParserContext, RoutePattern>,
@@ -132,7 +132,8 @@ export interface Router<
       },
       {
         error: (err: unknown, c: PatternContext) => Response | Promise<Response>;
-        beforeAll: (c: BaseContext) => any;
+        beforeParse: (c: BaseContext) => any;
+        afterParse: (c: ParserContext) => any;
       },
       BaseContext,
       PatternContext,
@@ -142,7 +143,8 @@ export interface Router<
       Routes,
       Routers,
       Events
-    > {
+    >,
+    Events {
   readonly pattern: Pattern;
   readonly parsers: Parsers;
   readonly routes: Routes;
@@ -232,7 +234,8 @@ class RouterUntyped {
   }
 
   error: any;
-  beforeAll: any;
+  beforeParse: any;
+  afterParse: any;
   on(event: RouterEvent, handler: any): this {
     this[event] = handler;
     return this;
