@@ -7,6 +7,13 @@ export type RouteHandler<BaseContext extends {}, Pattern extends string> = (
 
 export type RouterEvent = 'error' | 'beforeParse' | 'afterParse';
 
+export interface AnyRoute {
+  pattern: string;
+  method: string;
+  fn: any;
+  meta: any;
+}
+
 export type RouterMethods<
   // Config
   MethodsMap extends Record<string, string>,
@@ -16,9 +23,9 @@ export type RouterMethods<
   PatternContext extends {},
   ParserContext extends {},
   Pattern extends string,
-  Parsers extends any[],
-  Routes extends any[],
-  Routers extends any[],
+  Parsers extends Parser<any>[],
+  Routes extends AnyRoute[],
+  Routers extends Router<any>[],
   Events extends Record<RouterEvent, any>,
 > = {
   readonly [Name in keyof MethodsMap]: <
@@ -41,6 +48,7 @@ export type RouterMethods<
         pattern: RoutePattern;
         method: MethodsMap[Name];
         fn: RouteFn;
+        meta: Meta;
       },
     ],
     Routers,
@@ -69,6 +77,7 @@ export type RouterMethods<
         pattern: RoutePattern;
         method: RouteMethod;
         fn: RouteFn;
+        meta: Meta
       },
     ],
     Routers,
@@ -112,9 +121,9 @@ export interface Router<
   in ParserContext extends {} = any,
   // Fields
   in out Pattern extends string = any,
-  in out Parsers extends any[] = any,
-  in out Routes extends any[] = any,
-  in out Routers extends any[] = any,
+  in out Parsers extends Parser<any>[] = Parser<any>[],
+  in out Routes extends AnyRoute[] = AnyRoute[],
+  in out Routers extends Router<any>[] = any,
   in out Events extends Record<RouterEvent, any> = Record<RouterEvent, any>,
 >
   extends
