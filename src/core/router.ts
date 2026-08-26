@@ -130,7 +130,7 @@ export interface Router<
     RequireContext<BaseContext>,
     RouterMethods<
       {
-        any: '',
+        any: '';
         query: 'QUERY';
         get: 'GET';
         post: 'POST';

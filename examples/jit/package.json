@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "rolldown": "^1.2.6"
+  },
+  "scripts": {
+    "build": "rolldown -c"
+  },
+  "dependencies": {
+    "@swc/core": "^1.16.1"
+  }
+}

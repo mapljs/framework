@@ -5,7 +5,6 @@
     "": {
       "name": "example",
       "dependencies": {
-        "@mapl/pattern-router": "^0.0.1",
         "runtime-compiler": "^4.2.2",
       },
       "devDependencies": {
@@ -19,6 +18,9 @@
         "oxfmt": "^0.56.0",
         "picocolors": "^1.1.1",
         "typescript": "^7.0.2",
+      },
+      "optionalDependencies": {
+        "@mapl/pattern-router": "^0.0.1",
       },
     },
   },
