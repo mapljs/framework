@@ -86,6 +86,6 @@ export const task: import('./task.ts').Config = {
           description: `Files to scan in ${fmt.relativePath(LIB)} to include in the build. Defaults to ${fmt.glob('**/*.js')}.`,
         },
       },
-    }
+    },
   },
 };

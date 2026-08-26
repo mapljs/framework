@@ -77,7 +77,7 @@ export type RouterMethods<
         pattern: RoutePattern;
         method: RouteMethod;
         fn: RouteFn;
-        meta: Meta
+        meta: Meta;
       },
     ],
     Routers,
@@ -121,8 +121,8 @@ export interface Router<
   in ParserContext extends {} = any,
   // Fields
   in out Pattern extends string = any,
-  in out Parsers extends Parser<any>[] = Parser<any>[],
-  in out Routes extends AnyRoute[] = AnyRoute[],
+  in out Parsers extends Parser<any>[] = any,
+  in out Routes extends AnyRoute[] = any,
   in out Routers extends Router<any>[] = any,
   in out Events extends Record<RouterEvent, any> = Record<RouterEvent, any>,
 >
@@ -130,6 +130,7 @@ export interface Router<
     RequireContext<BaseContext>,
     RouterMethods<
       {
+        any: '',
         query: 'QUERY';
         get: 'GET';
         post: 'POST';
@@ -204,6 +205,10 @@ class RouterUntyped {
     return this;
   }
 
+  any(pattern: any, fn: any, meta: any): this {
+    this.routes.push(routeUntyped('', pattern, fn, meta));
+    return this;
+  }
   query(pattern: any, fn: any, meta: any): this {
     this.routes.push(routeUntyped('QUERY', pattern, fn, meta));
     return this;

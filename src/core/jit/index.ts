@@ -5,20 +5,18 @@ import type { BaseContext } from '../../index.ts';
 import { accessProperty, isAsyncFunction } from './utils.ts';
 import { normalizePattern } from '../../utils/pattern.ts';
 import { ResponseInfo } from '../response.ts';
+import { IS_AOT } from 'runtime-compiler/env';
 
-const defaultGlobals = `let ResponseInfo=$[${ref(ResponseInfo)}];`
+const defaultGlobals = `let ResponseInfo=$[${ref(ResponseInfo)}];`;
 export abstract class BuildState {
   /**
    * Add code for a route.
    *
    * Must handle HEAD requests for routes without a HEAD handler.
+   *
+   * @param contextPrefix `let c={...`
    */
-  abstract readonly addRoute: (method: string, pattern: string, code: string, routeState: RouterState) => void;
-
-  /**
-   * Finalize to a handler string.
-   */
-  abstract readonly finalize: () => string;
+  abstract addRoute(method: string, pattern: string, code: string, contextPrefix: string, routeState: RouterState): void;
 
   /**
    * Global declarations.
@@ -36,13 +34,15 @@ export abstract class BuildState {
 
 export type RouterState = [flags: number, contextKeys: string[]];
 
-export const REQUIRE_ASYNC = 0b1;
+export const REQUIRE_ASYNC = 1;
 
 export const nextId = (state: BuildState): string => 'r' + state.nextId++;
 export const createGlobalId = (state: BuildState, value: any): string => {
   const valueRef = ref(value),
     id = nextId(state);
-  state.globals += `let ${id}=$[${valueRef}]`;
+
+  IS_AOT || (state.globals += `let ${id}=$[${valueRef}];`);
+
   return id;
 };
 export const callWithoutArgs = (
@@ -56,8 +56,7 @@ export const callWithContextStatement = (
   fn: (c: any) => any,
   buildState: BuildState,
   routerState: RouterState,
-): string =>
-  callWithoutArgs(fn, buildState, routerState) + (fn.length > 0 ? '(c);' : '();');
+): string => callWithoutArgs(fn, buildState, routerState) + (fn.length > 0 ? '(c);' : '();');
 
 export const cloneRouterState = (routerState: RouterState): RouterState => {
   const newState: RouterState = routerState.slice() as any;
@@ -95,12 +94,14 @@ const buildRouter = (
     const parser = parsers[i];
 
     if (typeof parser.name === 'string') {
-      // Check illegal names
-      if (parser.name === 'req') throw new Error('cannot override c.req!');
-      else if (parser.name === 'res') throw new Error('cannot override c.res!');
+      const { name } = parser;
 
-      prefix += `c${accessProperty(parser.name)}=`;
-      routerState[1].push(parser.name);
+      // Check illegal names
+      if (name === 'req') throw new Error('cannot override c.req!');
+      else if (name === 'res') throw new Error('cannot override c.res!');
+
+      prefix += `c${accessProperty(name)}=`;
+      routerState[1].push(name);
     }
 
     prefix += callWithContextStatement(parser.init, buildState, routerState);
@@ -115,16 +116,15 @@ const buildRouter = (
 
   // Build routes
   {
-    let routePrefix = 'let c={req,res:new ResponseInfo';
+    let routeContextPrefix = 'let c={req,res:new ResponseInfo';
     for (
-      let i = 0, contextKeys = (routerState[1] = new Set(routerState[1]).values().toArray());
+      let i = 0, contextKeys = new Set(routerState[1]).values().toArray();
       i < contextKeys.length;
       i++
     )
-      routePrefix += `,${contextKeys[i]}:void 0`;
-    routePrefix += `};${prefix}return `;
+      routeContextPrefix += `,${contextKeys[i]}:void 0`;
 
-    for (let i = 0, { routes } = router; i < routes.length; i++) {
+    for (let i = 0, { routes } = router, routePrefix = prefix + 'return '; i < routes.length; i++) {
       let route = routes[i],
         routeState = cloneRouterState(routerState),
         routeContent =
@@ -134,7 +134,8 @@ const buildRouter = (
         route.method,
         normalizePattern(basePattern + route.pattern),
         routeContent,
-        routeState
+        routeContextPrefix,
+        routeState,
       );
     }
   }
@@ -144,7 +145,6 @@ const buildRouter = (
     buildRouter(routers[i], buildState, cloneRouterState(routerState), basePattern, prefix, suffix);
 };
 
-export const build = (router: Router<BaseContext>, buildState: BuildState): string => (
-  buildRouter(router, buildState, [0, []], '', '', ''),
-  buildState.finalize()
-);
+export const build = (router: Router<BaseContext>, buildState: BuildState): void => {
+  buildRouter(router, buildState, [0, []], '', '', '');
+};

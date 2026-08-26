@@ -3,6 +3,7 @@ import jit from '@mapl/framework/jit';
 
 // Cache response
 const errorResponse = new Response(null, { status: 500 });
+
 const api = router(
   // no parsers
   [],

@@ -4,14 +4,13 @@
  * @example
  * ```ts
  * router([])
- *   .get('/events', (c) => sendEvents(
+ *   .get('/events', (c) => createEventStream(
  *     c.res,
- *
  *     createEventStream(c.req)
  *   ));
  * ```
  */
-export const sendEvents = (res: { headers: Headers }, body: ReadableStream): Response => {
+export const createEventStream = (res: { headers: Headers }, body: ReadableStream): Response => {
   res.headers.set('content-type', 'text/event-stream');
   res.headers.set('cache-control', 'no-cache');
   res.headers.set('connection', 'keep-alive');
