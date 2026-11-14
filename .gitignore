@@ -1,0 +1,6 @@
+# packages
+node_modules
+/dist/**/*
+
+# darwin
+.DS_Store

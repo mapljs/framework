@@ -1,0 +1,32 @@
+{
+  "type": "module",
+  "version": "0.0.1",
+  "description": "",
+  "keywords": [],
+  "homepage": "",
+  "repository": "",
+  "exports": {
+    ".": "./index.mjs",
+    "./*": "./*.mjs"
+  },
+  "scripts": {
+    "fmt": "oxfmt",
+    "test": "node --test src/**/*.test.mts",
+    "build": "node scripts/src/build.mts",
+    "pkg-stats": "node scripts/src/pkg-stats.mts",
+    "push-release": "node scripts/src/push-release.mts",
+    "setup": "node scripts/src/setup.mts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.0",
+    "oxc-minify": "^0.154.0",
+    "oxc-transform": "^0.154.0",
+    "oxfmt": "^0.73.0",
+    "typescript": "^7.0.2"
+  },
+  "sideEffects": false,
+  "dependencies": {
+    "@mapl/framework": "link:dist",
+    "@mapl/pattern-router": "^0.1.2"
+  }
+}
