@@ -11,9 +11,11 @@
     "exactOptionalPropertyTypes": true,
     "strictBuiltinIteratorReturn": true,
     "strictFunctionTypes": true,
-
     // Isolated declarations
     "isolatedDeclarations": true,
     "isolatedModules": true
-  }
+  },
+  "exclude": [
+    "**/*.test.mts"
+  ]
 }

@@ -9,17 +9,20 @@ import {
 import type { Group, Handler } from '../core/route.mts';
 import { router_compile_to_code } from '@mapl/pattern-router/jit';
 
-const AsyncFunction = (async () => {}).constructor,
+export const AsyncFunction: {
+    (...args: string[]): (...args: any[]) => Promise<any>;
+    new (...args: string[]): (...args: any[]) => Promise<any>;
+  } = (async () => {}).constructor as any,
   isAsyncFn = (fn: unknown): fn is (...args: any[]) => Promise<any> => fn instanceof AsyncFunction,
   concatPrefix = (a: string, b: string): string => (a === '/' ? b : b === '/' ? a : a + b),
-  getRequiredArgs = (arr: unknown[], startIdx: number, id_map: Map<unknown, string>): string => {
+  getRequiredArgs = (arr: unknown[], startIdx: number, idMap: Map<unknown, string>): string => {
     if (arr.length <= startIdx) return '';
 
-    let str = id_map.get(arr[startIdx]);
+    let str = idMap.get(arr[startIdx]);
     if (str == null) throw new Error(`id ${arr[startIdx]} is not parsed!`);
 
     while (++startIdx < arr.length) {
-      const key = id_map.get(arr[startIdx]);
+      const key = idMap.get(arr[startIdx]);
       if (key == null) throw new Error(`id ${arr[startIdx]} is not parsed!`);
       str += ',' + key;
     }
@@ -27,9 +30,9 @@ const AsyncFunction = (async () => {}).constructor,
     return str;
   };
 
-export default (group: Group, parentPath: string, id_map: Map<any, string>): string => {
+export default (group: Group, parentPath: string, idMap: Map<any, string>, handlerArgs: string): string => {
   let urlRouter: Router<string> = router_init(),
-    globalScope = '',
+    globalDecls = 'let o=(h,r)=>h?(r.body.cancel(),new Response(null,r)):r',
     keyAvailableId = 0,
     hookAvailableId = 0,
     subrouteAvailableId = 0,
@@ -39,7 +42,7 @@ export default (group: Group, parentPath: string, id_map: Map<any, string>): str
     group: Group,
 
     // parsed ids
-    id_map: Map<any, string>,
+    idMap: Map<any, string>,
 
     // final url router
     urlPrefix: string,
@@ -63,21 +66,21 @@ export default (group: Group, parentPath: string, id_map: Map<any, string>): str
       if (hookId & 1) {
         const hookTargetId = hook[1];
 
-        if (id_map.has(hookTargetId))
+        if (idMap.has(hookTargetId))
           throw new Error(`id ${hookTargetId} already existed or parsed!`);
         if (idMapNotCloned) {
-          id_map = new Map(id_map);
+          idMap = new Map(idMap);
           idMapNotCloned = false;
         }
 
         const parsedId = 'k' + keyAvailableId++;
-        id_map.set(hookTargetId, parsedId);
+        idMap.set(hookTargetId, parsedId);
 
         if (hookId < 7) {
           const callId = 'm' + hookAvailableId++;
-          globalScope += `let ${callId}=${parentPath}[0][${i}][2];`;
+          globalDecls += `,${callId}=${parentPath}[0][${i}][2]`;
 
-          let call = callId + `(${getRequiredArgs(hook, 3, id_map)});`;
+          let call = callId + `(${getRequiredArgs(hook, 3, idMap)});`;
           if (isAsyncFn(hook[2])) {
             isScopeAsync = true;
             call = 'await ' + call;
@@ -99,20 +102,20 @@ export default (group: Group, parentPath: string, id_map: Map<any, string>): str
         }
 
         // use()
-        else if (hookId === 7) globalScope += `let ${parsedId}=${parentPath}[0][${i}][2];`;
+        else if (hookId === 7) globalDecls += `,${parsedId}=${parentPath}[0][${i}][2]`;
 
         // build()
         else if (hookId === 9) {
-          let call = parentPath + `[0][${i}][2](${getRequiredArgs(hook, 3, id_map)});`;
+          let call = parentPath + `[0][${i}][2](${getRequiredArgs(hook, 3, idMap)})`;
           if (isAsyncFn(hook[2])) call = 'await ' + call;
 
-          globalScope += `let ${parsedId}=` + call;
+          globalDecls += `,${parsedId}=` + call;
         }
       } else {
         const callId = 'm' + hookAvailableId++;
-        globalScope += `let ${callId}=${parentPath}[0][${i}][2];`;
+        globalDecls += `,${callId}=${parentPath}[0][${i}][2]`;
 
-        let call = callId + `(${getRequiredArgs(hook, 3, id_map)});`;
+        let call = callId + `(${getRequiredArgs(hook, 3, idMap)});`;
         if (isAsyncFn(hook[2])) {
           isScopeAsync = true;
           call = 'await ' + call;
@@ -143,11 +146,11 @@ export default (group: Group, parentPath: string, id_map: Map<any, string>): str
 
       for (const subrouteKey in subroutes) {
         const subrouteId = 's' + subrouteAvailableId++;
-        globalScope += `let ${subrouteId}=${parentPath}[1]["${subrouteKey}"];`;
+        globalDecls += `,${subrouteId}=${parentPath}[1]["${subrouteKey}"]`;
 
         compileGroup(
           subroutes[subrouteKey as keyof typeof subroutes],
-          id_map,
+          idMap,
           concatPrefix(urlPrefix, subrouteKey),
           isDynamic || is_dynamic_pattern(subrouteKey),
           subrouteId,
@@ -169,7 +172,7 @@ export default (group: Group, parentPath: string, id_map: Map<any, string>): str
         isDynamicRoute = isDynamic || is_dynamic_pattern(routePath),
         isRouteScopeAsync = isScopeAsync,
         // route handler id
-        params = getRequiredArgs(handler, 3, id_map),
+        params = getRequiredArgs(handler, 3, idMap),
         callId = 'h' + handleAvailableId++;
 
       // add url params
@@ -177,7 +180,7 @@ export default (group: Group, parentPath: string, id_map: Map<any, string>): str
         params +=
           (handler.length > 3 ? ',' : '') + (isDynamicRoute ? 'm.groups' : 'Object.create(null)');
 
-      globalScope += `let ${callId}=${parentPath}[${startIdx}][2];`;
+      globalDecls += `,${callId}=${parentPath}[${startIdx}][2]`;
 
       let store = callId + `(${params})`;
       if (isAsyncFn(fn)) {
@@ -198,10 +201,18 @@ export default (group: Group, parentPath: string, id_map: Map<any, string>): str
 
       startIdx++;
     }
-  })(group, id_map, '/', false, parentPath, false, '', '');
+  })(group, idMap, '/', false, parentPath, false, '', '');
 
   return (
-    globalScope +
-    `let o=(h,r)=>h?(r.body.cancel(),new Response(null,r)):r;return r=>{let h=false,c={status:200,headers:new Headers(),statusText:''},u=r.url,s=u.indexOf('/',9),e=u.indexOf('?',s+1),p=e===-1?u.slice(s):u.slice(e);${router_compile_to_code(urlRouter, 'm', 'p', 'r.method', 'h=true')}return new Response(null,{status:404})};`
+    globalDecls +
+    // r: request
+    // d: response headers
+    // c: request context
+    // u: url
+    // s: path start
+    // e: path end
+    // m: matched dynamic handler
+    // o: remove response body helper if method = HEAD
+    `;return ${handlerArgs}=>{let h=false,d=new Headers(),c={status:200,headers:d,statusText:''},u=r.url,s=u.indexOf('/',9),e=u.indexOf('?',s+1),p=e===-1?u.slice(s):u.slice(e);${router_compile_to_code(urlRouter, 'm', 'p', 'r.method', 'h=true')}return new Response(null,{status:404})};`
   );
 };

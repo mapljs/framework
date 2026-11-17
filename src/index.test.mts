@@ -1,15 +1,17 @@
 import { hook, route } from './index.mts';
-import { compile, request } from './wintertc.mts';
+import { compile, ids } from './wintertc.mts';
 
 const router = route.group(
   [
     hook.error((e) => {
       console.error(e);
-      return new Response('L');
+      return new Response('error', { status: 500 });
     }),
   ],
-  route.get('/*', (req) => new Response(req.url), request),
+  route.get('/*', (req) => new Response(req.url), ids.request),
   route.get('/:id', (params) => new Response(params.id)),
 );
 
-console.log(compile(router).toString());
+export default {
+  fetch: await compile(router),
+};
