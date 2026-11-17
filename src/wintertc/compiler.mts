@@ -29,8 +29,29 @@ export const AsyncFunction: {
 
     return str;
   };
+/**
+ r: request
 
-export default (group: Group, parentPath: string, idMap: Map<any, string>, handlerArgs: string): string => {
+ d: response headers
+
+ c: request context
+
+ u: url
+
+ s: path start
+
+ e: path end
+
+ m: matched dynamic handler
+
+ o: remove response body helper if method = `HEAD`
+ */
+export default (
+  group: Group,
+  parentPath: string,
+  idMap: Map<any, string>,
+  handlerArgs: string,
+): string => {
   let urlRouter: Router<string> = router_init(),
     globalDecls = 'let o=(h,r)=>h?(r.body.cancel(),new Response(null,r)):r',
     keyAvailableId = 0,
@@ -205,14 +226,6 @@ export default (group: Group, parentPath: string, idMap: Map<any, string>, handl
 
   return (
     globalDecls +
-    // r: request
-    // d: response headers
-    // c: request context
-    // u: url
-    // s: path start
-    // e: path end
-    // m: matched dynamic handler
-    // o: remove response body helper if method = HEAD
     `;return ${handlerArgs}=>{let h=false,d=new Headers(),c={status:200,headers:d,statusText:''},u=r.url,s=u.indexOf('/',9),e=u.indexOf('?',s+1),p=e===-1?u.slice(s):u.slice(e);${router_compile_to_code(urlRouter, 'm', 'p', 'r.method', 'h=true')}return new Response(null,{status:404})};`
   );
 };
