@@ -2,136 +2,82 @@ import { get_args, get_args_with_tags } from './utils.mts';
 
 export type AnyHook = [number, ...any[]];
 
-export type InferHookTags<T extends any[]> = T extends [infer First, ...infer Rest]
-  ? First extends ValueTag<infer V>
-  ? [V, ...InferHookTags<Rest>]
-  : InferHookTags<Rest>
-  : [];
-
-export interface ValueTag<out T> {
-  '~V': T;
-}
-
-export type HookBuildData = [visiting: boolean, shortestAccessPath: string, maxDepthFromRoot: number, hook: AnyHook];
-export type HookBuildMap = Map<AnyHook, HookBuildData>;
+export type Id<T = unknown> = string & { '~V': T };
+export type InferIds<Requires extends Id[]> = {
+  [K in keyof Requires]: Requires[K]['~V'];
+};
+export type ParsedId<T extends Id> = T['~V'] | Promise<T['~V']>;
 
 /**
- * Create requirements.
+ * Create a dependency.
  */
-export const requires: <const Requires extends AnyHook[]>(...requires: Requires) => Requires =
-  get_args,
+export const id = <T,>(id: unknown = Symbol()): T extends Promise<any> ? never : Id<T> => id as any,
+  group: <const Hook extends AnyHook[]>(...hook: Hook) => Hook = get_args,
   /**
-   * Create a parse hook.
+   * Parse a value.
    */
-  parse: <Hook extends any[], T extends {} | null, Requires extends AnyHook[]>(
-    ...args: Hook &
-    [
-      parse: (...requires: InferHookTags<Requires>) => T,
-      ...(
-        | Requires
-        | [
-          drop: (value: Awaited<T>, ...requires: InferHookTags<Requires>) => any,
-          ...requires: Requires,
-        ]
-      ),
-    ]
-  ) => [1, ...Hook] & ValueTag<Awaited<T>> = get_args_with_tags(1),
+  parse: <TargetId extends Id, const Hook extends any[], Requires extends Id[] = []>(
+    ...hook: Hook &
+      [
+        id: TargetId,
+        parse: (...args: InferIds<Requires>) => ParsedId<TargetId>,
+        ...requires: Requires,
+      ]
+  ) => [1, ...Hook] = get_args_with_tags(1),
   /**
-   * Create a resource hook.
+   * Create a resource.
    */
-  use: <const Hook extends any[], T extends Disposable, Requires extends AnyHook[]>(
-    ...args: Hook & [use: (...requires: InferHookTags<Requires>) => T, ...requires: Requires]
-  ) => [2, ...Hook] & ValueTag<Awaited<T>> = get_args_with_tags(2),
+  resource: <TargetId extends Id<Disposable>, const Hook extends any[], Requires extends Id[] = []>(
+    ...hook: Hook &
+      [id: TargetId, f: (...args: InferIds<Requires>) => ParsedId<TargetId>, ...requires: Requires]
+  ) => [3, ...Hook] = get_args_with_tags(3),
   /**
-   * Create an async resource hook.
+   * Create an async resource.
    */
-  use_async: <const Hook extends any[], T extends AsyncDisposable, Requires extends AnyHook[]>(
-    ...args: Hook & [use: (...requires: InferHookTags<Requires>) => T, ...requires: Requires]
-  ) => [3, ...Hook] & ValueTag<Awaited<T>> = get_args_with_tags(3),
+  async_resource: <
+    TargetId extends Id<Disposable>,
+    const Hook extends any[],
+    Requires extends Id[] = [],
+  >(
+    ...hook: Hook &
+      [id: TargetId, f: (...args: InferIds<Requires>) => ParsedId<TargetId>, ...requires: Requires]
+  ) => [5, ...Hook] = get_args_with_tags(5),
   /**
-   * Create a hook that runs on request cleanup.
+   * Use an external value.
    */
-  defer: <const Hook extends any[], Requires extends AnyHook[]>(
-    ...args: Hook & [defer: (...requires: InferHookTags<Requires>) => any, ...requires: Requires]
+  use: <TargetId extends Id<Disposable>, const Hook extends any[]>(
+    ...hook: Hook & [id: TargetId, value: ParsedId<TargetId>]
+  ) => [7, ...Hook] = get_args_with_tags(7),
+  /**
+   * Build an external value.
+   */
+  build: <TargetId extends Id<Disposable>, const Hook extends any[], Requires extends Id[] = []>(
+    ...hook: Hook &
+      [
+        id: TargetId,
+        value: (...args: InferIds<Requires>) => ParsedId<TargetId>,
+        ...requires: Requires,
+      ]
+  ) => [9, ...Hook] = get_args_with_tags(9),
+  /**
+   * Run something before handling.
+   */
+  run: <const Hook extends any[], Requires extends Id[] = []>(
+    ...hook: Hook & [f: (...args: InferIds<Requires>) => any, ...requires: Requires]
+  ) => [2, ...Hook] = get_args_with_tags(2),
+  /**
+   * Run something after handling.
+   */
+  defer: <const Hook extends any[], Requires extends Id[] = []>(
+    ...hook: Hook & [f: (...args: InferIds<Requires>) => any, ...requires: Requires]
   ) => [4, ...Hook] = get_args_with_tags(4),
   /**
-   * @internal
+   * Run on error.
    */
-  hook_requires_start_idx = (hook: AnyHook): number => hook[0] === 1
-    ? // no drop function then requires starts at 2
-    hook.length < 3 || Array.isArray(hook[2])
-      ? 2
-      : 3
-    : // other hooks start at 2
-    2,
-  /**
-   * Load a hook, its requirement hooks and detect recursive requirements.
-   * @internal
-   */
-  build_hook_order = (
-    parentHook: unknown[],
-    requiresStartIdx: number,
-    parentAccessPath: string,
-    postorder: AnyHook[],
-    currentMap: HookBuildMap
-  ): void => {
-    while (requiresStartIdx < parentHook.length) {
-      const hook = parentHook[requiresStartIdx] as AnyHook;
-      if (hook[0] > -1 && hook[0] < 5) {
-        let hookData = currentMap.get(hook),
-          currentAccessPath = parentAccessPath + `[${requiresStartIdx}]`;
-
-        if (hookData == null) {
-          currentMap.set(
-            hook,
-            (hookData = [true, currentAccessPath, 0, hook]),
-          );
-
-          // visit child hooks
-          build_hook_order(
-            hook,
-            hook_requires_start_idx(hook),
-            hookData[1],
-            postorder,
-            currentMap
-          );
-
-          // done visiting
-          hookData[0] = false;
-          postorder.push(hook);
-        } else if (hookData[0])
-          // node is the child of itself
-          throw new Error(
-            `recursive hook requirements at ${currentAccessPath}`,
-          );
-        else if (hookData[1].length > currentAccessPath.length)
-          // set shorter access path
-          hookData[1] = currentAccessPath;
-      }
-
-      requiresStartIdx++;
-    }
-  },
-  /**
-   * Sort ordered hooks by depths.
-   */
-  build_hook_depths = (postorder: AnyHook[], currentMap: HookBuildMap): HookBuildData[][] => {
-    let depths: HookBuildData[][] = [];
-
-    for (let i = postorder.length - 1; i >= 0; i--) {
-      const parentHook = postorder[i],
-        parentData = currentMap.get(parentHook)!,
-        parentDepth = parentData[2];
-
-      while (depths.length <= parentDepth) depths.push([]);
-      depths[parentDepth].push(parentData);
-
-      for (let j = hook_requires_start_idx(parentHook); j < parentHook.length; j++) {
-        const hookData = currentMap.get(parentHook[j])!;
-        if (parentDepth >= hookData[2])
-          hookData[2] = parentDepth + 1;
-      }
-    }
-
-    return depths;
-  };
+  error: <const Hook extends any[], Requires extends Id[] = []>(
+    ...hook: Hook &
+      [
+        f: (err: unknown, ...args: InferIds<Requires>) => Response | Promise<Response>,
+        ...requires: Requires,
+      ]
+  ) => [6, ...Hook] = get_args_with_tags(6);

@@ -1,16 +1,11 @@
 import type { InferParams } from '@mapl/pattern-router/tree/utils';
 import { get_args, get_args_with_tags } from './utils.mts';
-import type { AnyHook, InferHookTags } from './hook.mts';
+import type { Id, InferIds, AnyHook } from './hook.mts';
 
 /**
  * A route handler.
  */
-export type Handler = [
-  string,
-  string,
-  (...args: any[]) => Response | Promise<Response>,
-  ...AnyHook[],
-];
+export type Handler = [string, string, (...args: any[]) => Response | Promise<Response>, ...Id[]];
 
 /**
  * A route group.
@@ -25,14 +20,14 @@ export type Group =
 type CreateRequestHandler<Method extends string> = <
   const Route extends any[],
   Path extends string,
-  Requires extends AnyHook[] = [],
+  Requires extends Id[] = [],
 >(
   path: Path,
   ...handler: Route &
     [
       handle: (
         ...args: [
-          ...requires: InferHookTags<Requires>,
+          ...requires: InferIds<Requires>,
           params: Record<string, string | undefined> & InferParams<Path>,
         ]
       ) => Response | Promise<Response>,
@@ -47,7 +42,7 @@ export const handle: <
     Route extends any[],
     Method extends string,
     Path extends string,
-    Requires extends AnyHook[] = [],
+    Requires extends Id[] = [],
   >(
     ...handler: Route &
       [
@@ -55,7 +50,7 @@ export const handle: <
         path: Path,
         handle: (
           ...args: [
-            ...requires: InferHookTags<Requires>,
+            ...requires: InferIds<Requires>,
             params: Record<string, string | undefined> & InferParams<Path>,
           ]
         ) => Response | Promise<Response>,
