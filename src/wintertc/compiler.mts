@@ -98,10 +98,10 @@ export default (
         idMap.set(hookTargetId, parsedId);
 
         if (hookId < 7) {
-          const callId = 'm' + hookAvailableId++;
-          globalDecls += `,${callId}=${parentPath}[0][${i}][2]`;
+          let callId = 'm' + hookAvailableId++,
+            call = callId + `(${getRequiredArgs(hook, 3, idMap)});`;
 
-          let call = callId + `(${getRequiredArgs(hook, 3, idMap)});`;
+          globalDecls += `,${callId}=${parentPath}[0][${i}][2]`;
           if (isAsyncFn(hook[2])) {
             isScopeAsync = true;
             call = 'await ' + call;
@@ -133,10 +133,10 @@ export default (
           globalDecls += `,${parsedId}=` + call;
         }
       } else {
-        const callId = 'm' + hookAvailableId++;
+        let callId = 'm' + hookAvailableId++,
+          call = callId + `(${getRequiredArgs(hook, 3, idMap)});`;
         globalDecls += `,${callId}=${parentPath}[0][${i}][2]`;
 
-        let call = callId + `(${getRequiredArgs(hook, 3, idMap)});`;
         if (isAsyncFn(hook[2])) {
           isScopeAsync = true;
           call = 'await ' + call;
@@ -163,8 +163,7 @@ export default (
 
     // has subroutes
     if (!Array.isArray(group[1])) {
-      let subroutes = group[1];
-
+      const subroutes = group[1];
       for (const subrouteKey in subroutes) {
         const subrouteId = 's' + subrouteAvailableId++;
         globalDecls += `,${subrouteId}=${parentPath}[1]["${subrouteKey}"]`;
@@ -186,9 +185,9 @@ export default (
 
     while (startIdx < group.length) {
       let handler = group[startIdx] as Handler,
-        fn = handler[2],
         routeMethod = handler[0],
         routePath = handler[1],
+        fn = handler[2],
         // route-specific state
         isDynamicRoute = isDynamic || is_dynamic_pattern(routePath),
         isRouteScopeAsync = isScopeAsync,
@@ -226,6 +225,6 @@ export default (
 
   return (
     globalDecls +
-    `;return ${handlerArgs}=>{let h=false,d=new Headers(),c={status:200,headers:d,statusText:''},u=r.url,s=u.indexOf('/',9),e=u.indexOf('?',s+1),p=e===-1?u.slice(s):u.slice(e);${router_compile_to_code(urlRouter, 'm', 'p', 'r.method', 'h=true')}return new Response(null,{status:404})};`
+    `;return ${handlerArgs}=>{let h=false,c={status:200,headers:new Headers(),statusText:''},u=r.url,s=u.indexOf('/',9),e=u.indexOf('?',s+1),p=e===-1?u.slice(s):u.slice(e);${router_compile_to_code(urlRouter, 'm', 'p', 'r.method', 'h=true')}return new Response(null,{status:404})};`
   );
 };
