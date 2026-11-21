@@ -4,10 +4,11 @@
     "version": "0.0.1",
     "specs": {
       "dependencies": {
-        "@mapl/framework": "link:dist",
-        "@mapl/pattern-router": "^0.1.2"
+        "@mapl/pattern-router": "0.1.3"
       },
       "devDependencies": {
+        "@cloudflare/workers-types": "^5.20261120.1",
+        "@mapl/framework": "link:dist",
         "@types/node": "^26.4.0",
         "oxc-minify": "^0.154.0",
         "oxc-transform": "^0.154.0",
@@ -16,8 +17,9 @@
       }
     },
     "dependencies": {
+      "@cloudflare/workers-types": "5.20261120.1",
       "@mapl/framework": "link:dist",
-      "@mapl/pattern-router": "0.1.2",
+      "@mapl/pattern-router": "0.1.3",
       "@types/node": "26.6.6",
       "oxc-minify": "0.154.0",
       "oxc-transform": "0.154.0",
@@ -26,8 +28,11 @@
     }
   },
   "packages": {
-    "@mapl/pattern-router@0.1.2": {
-      "integrity": "sha512-XhiykaIW9PHPvdmdXrf5BXFVmqSfknQlK+Ri2RucLOc7HPIxWC27THwG1CrU/u2IRDlRfG56fPa+qWCCyZbqjQ=="
+    "@cloudflare/workers-types@5.20261120.1": {
+      "integrity": "sha512-bpaDXQ1oYqWhLCAqV5fO0pPB2tduDEEFyIMedZVi0NqzW/7T8DlJ8hUe3DqoDG1RQ8X7zTbK555Qr9yAyyUhmQ=="
+    },
+    "@mapl/pattern-router@0.1.3": {
+      "integrity": "sha512-SvxEwiY6B+pketz0o9tgwjzHSFFmneVNs4X38DTmW/yMcWbdHduhtuqY3aBjOYyt36g+5azeHv0gm+CCaX847g=="
     },
     "@oxc-minify/binding-android-arm-eabi@0.154.0": {
       "integrity": "sha512-BA6uu03j0va8yUa90e13Xr5fLHMfDwTDGOV3MarHMAoE22k2v37bto2jG0TiEbvqSCFZ993kEix3j2BvVOJ7ug==",

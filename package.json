@@ -18,6 +18,8 @@
     "setup": "node scripts/src/setup.mts"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261120.1",
+    "@mapl/framework": "link:dist",
     "@types/node": "^26.4.0",
     "oxc-minify": "^0.154.0",
     "oxc-transform": "^0.154.0",
@@ -26,7 +28,6 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@mapl/framework": "link:dist",
-    "@mapl/pattern-router": "^0.1.2"
+    "@mapl/pattern-router": "0.1.3"
   }
 }
