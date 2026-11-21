@@ -1,5 +1,5 @@
 import { hook, route } from './index.mts';
-import { compile, ids } from './cloudflare.mts';
+import { compile, ids } from './wintertc.mts';
 
 const org = hook.id<string>();
 
@@ -30,6 +30,9 @@ const router = route.group(
   route.get('/*', (req) => new Response(req.url), ids.request),
 );
 
-export default {
-  fetch: compile(router),
+const o = {
+  fetch: await compile(router),
 };
+console.log(o.fetch.toString());
+
+export default o;

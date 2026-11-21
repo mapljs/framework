@@ -1,10 +1,5 @@
 import { is_dynamic_pattern } from '@mapl/pattern-router/tree/utils';
-import {
-  router_init,
-  router_set_dynamic,
-  router_set_static,
-  type Router,
-} from '@mapl/pattern-router';
+import { router_set_dynamic, router_set_static, type Router } from '@mapl/pattern-router';
 
 import type { Group, Handler } from '../core/route.mts';
 import { router_compile_to_code } from '@mapl/pattern-router/jit';
@@ -31,30 +26,29 @@ export const AsyncFunction: {
     return str;
   },
   /**
- r: request
+   r: request
 
- d: response headers
+   d: response headers
 
- c: request context
+   c: request context
 
- u: url
+   u: url
 
- s: path start
+   s: path start
 
- e: path end
+   e: path end
 
- m: matched dynamic handler
+   m: matched dynamic handler
 
- o: remove response body helper if method = `HEAD`
- */
-  compile_to_string = (
+   o: remove response body helper if method = `HEAD`
+   */
+  compile_group = (
     group: Group,
+    urlRouter: Router<string>,
     parentPath: string,
     idMap: Map<any, string>,
-    handlerArgs: string,
   ): string => {
-    let urlRouter: Router<string> = router_init(),
-      globalDecls = 'let o=(h,r)=>h?(r.body.cancel(),new Response(null,r)):r',
+    let globalDecls = 'let o=(h,r)=>h?(r.body.cancel(),new Response(null,r)):r',
       keyAvailableId = 0,
       hookAvailableId = 0,
       subrouteAvailableId = 0,
@@ -231,8 +225,7 @@ export const AsyncFunction: {
       }
     })(group, idMap, '/', false, parentPath, false, '', '');
 
-    return (
-      globalDecls +
-      `;return ${handlerArgs}=>{let h=false,c={status:200,headers:new Headers(),statusText:''},u=r.url,s=u.indexOf('/',9),e=u.indexOf('?',s+1),p=e===-1?u.slice(s):u.slice(e);${router_compile_to_code(urlRouter, 'm', 'p', 'r.method', 'h=true')}return new Response(null,{status:404})};`
-    );
-  };
+    return globalDecls;
+  },
+  compile_fn_body = (urlRouter: Router<string>) =>
+    `{let h=false,c={status:200,headers:new Headers(),statusText:''},u=r.url,s=u.indexOf('/',9),e=u.indexOf('?',s+1),p=e===-1?u.slice(s):u.slice(e);${router_compile_to_code(urlRouter, 'm', 'p', 'r.method', 'h=true')}return new Response(null,{status:404})}`;
