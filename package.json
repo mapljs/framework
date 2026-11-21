@@ -28,6 +28,6 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@mapl/pattern-router": "0.1.3"
+    "@mapl/pattern-router": "^0.1.3"
   }
 }
