@@ -5,7 +5,7 @@ import type { Id, InferIds, AnyHook } from './hook.mts';
 /**
  * A route handler.
  */
-export type Handler = [string, string, (...args: any[]) => Response | Promise<Response>, ...Id[]];
+export type Handler = [string, string, (...args: any[]) => any, ...Id[]];
 
 /**
  * A route group.
@@ -30,7 +30,7 @@ type CreateRequestHandler<Method extends string> = <
           ...requires: InferIds<Requires>,
           params: Record<string, string | undefined> & InferParams<Path>,
         ]
-      ) => Response | Promise<Response>,
+      ) => any,
       ...requires: Requires,
     ]
 ) => [Method, Path, ...Route];
@@ -53,7 +53,7 @@ export const handle: <
             ...requires: InferIds<Requires>,
             params: Record<string, string | undefined> & InferParams<Path>,
           ]
-        ) => Response | Promise<Response>,
+        ) => any,
         ...requires: Requires,
       ]
   ) => Route = get_args,
