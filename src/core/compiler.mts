@@ -16,10 +16,6 @@ export const params: Id<Record<string, string | undefined>> = 'core:params' as a
   // Merge 2 group prefixes or a group prefix with handler path
   concat_prefix = (a: string, b: string): string => (a === '/' ? b : b === '/' ? a : a + b),
   // Verify & parse arguments for a handler
-  assert_parse_id = (id: unknown, idMap: Map<unknown, string>): unknown => {
-    if (id === params || idMap.has(id)) throw new Error(`id ${id} already existed or parsed!`);
-    return id;
-  },
   get_arg = (argName: unknown, idMap: Map<unknown, string>, isDynamicRoute: boolean): string => {
     if (argName === params) {
       if (isDynamicRoute) return idMap.get(params)!;
@@ -105,7 +101,9 @@ export const params: Id<Record<string, string | undefined>> = 'core:params' as a
 
         // parse result to an id
         if (hookId & 1) {
-          const hookTargetId = assert_parse_id(hook[1], idMap);
+          const hookTargetId = hook[1];
+
+          if (idMap.has(hookTargetId)) throw new Error(`id ${hookTargetId} already existed or parsed!`);
           if (idMapNotCloned) {
             idMap = new Map(idMap);
             idMapNotCloned = false;
