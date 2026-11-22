@@ -16,7 +16,7 @@ const router = route.group(
 );
 
 export default {
-  fetch: await compile(router),
+  fetch: compile(router),
 };
 ```
 
