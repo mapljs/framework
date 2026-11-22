@@ -11,9 +11,6 @@ export const DEFAULT_PARAMS = 'Object.create(null)',
     (...args: string[]): (...args: any[]) => Promise<any>;
     new (...args: string[]): (...args: any[]) => Promise<any>;
   } = (async () => {}).constructor as any,
-  // Whether a function is marked async
-  is_async_fn = (fn: unknown): fn is (...args: any[]) => Promise<any> =>
-    fn instanceof AsyncFunction,
   // Merge 2 group prefixes or a group prefix with handler path
   concat_prefix = (a: string, b: string): string => (a === '/' ? b : b === '/' ? a : a + b),
   // Verify & parse arguments for a handler
@@ -134,7 +131,7 @@ export const DEFAULT_PARAMS = 'Object.create(null)',
               // call hook
               call = callId + `(${get_args(hook, 3, idMap, urlParams)});`;
             globalDecls += `,${callId}=${parentPath}[0][${i}][2]`;
-            if (is_async_fn(hook[2])) {
+            if (hook[2] instanceof AsyncFunction) {
               isScopeAsync = true;
               call = 'await ' + call;
             }
@@ -169,7 +166,7 @@ export const DEFAULT_PARAMS = 'Object.create(null)',
             else {
               let call =
                 parentPath + `[0][${i}][2](${get_args(hook, 3, globalIdMap, DEFAULT_PARAMS)})`;
-              if (is_async_fn(hook[2])) call = 'await ' + call;
+              if (hook[2] instanceof AsyncFunction) call = 'await ' + call;
 
               globalDecls += `,${parsedId}=` + call;
             }
@@ -186,7 +183,7 @@ export const DEFAULT_PARAMS = 'Object.create(null)',
                   : `(e,${requires});`
                 : `(${requires});`);
           globalDecls += `,${callId}=${parentPath}[0][${i}][1]`;
-          if (is_async_fn(hook[1])) {
+          if (hook[1] instanceof AsyncFunction) {
             isScopeAsync = true;
             call = 'await ' + call;
           }
@@ -252,7 +249,7 @@ export const DEFAULT_PARAMS = 'Object.create(null)',
         // call route handler
         let store = callId + `(${args})`;
         globalDecls += `,${callId}=${parentPath}[${startIdx}][2]`;
-        if (is_async_fn(fn)) {
+        if (fn instanceof AsyncFunction) {
           store = 'await ' + store;
           isRouteScopeAsync = true;
         }
