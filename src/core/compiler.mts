@@ -4,7 +4,8 @@ import { is_dynamic_pattern } from '@mapl/pattern-router/tree/utils';
 import type { Group, Handler } from './route.mts';
 import type { Id } from './hook.mts';
 
-export const params: Id<Record<string, string | undefined>> = 'core:params' as any,
+export const DEFAULT_PARAMS = 'Object.create(null)',
+  params: Id<Readonly<Record<string, string | undefined>>> = 'core:params' as any,
   // Async function constructor
   AsyncFunction: {
     (...args: string[]): (...args: any[]) => Promise<any>;
@@ -17,7 +18,7 @@ export const params: Id<Record<string, string | undefined>> = 'core:params' as a
   concat_prefix = (a: string, b: string): string => (a === '/' ? b : b === '/' ? a : a + b),
   // Verify & parse arguments for a handler
   get_arg = (argName: unknown, idMap: Map<unknown, string>, urlParams: string): string => {
-    if (argName === params) return urlParams.length > 0 ? urlParams : 'Object.create(null)';
+    if (argName === params) return urlParams;
 
     const str = idMap.get(argName);
     if (str == null) throw new Error(`id ${argName} is not parsed!`);
@@ -83,192 +84,194 @@ export const params: Id<Record<string, string | undefined>> = 'core:params' as a
     hookAvailableId = 0,
     subrouteAvailableId = 0,
     handleAvailableId = 0,
-  ): string =>
-    (
-      (function compileGroup(
-        group: Group,
+  ): string => {
+    const getUrlParams = (urlParams: string, urlPrefix: string) =>
+      urlParams !== DEFAULT_PARAMS || is_dynamic_pattern(urlPrefix)
+        ? globalUrlParams
+        : DEFAULT_PARAMS;
 
-        // parsed ids
-        idMap: Map<any, string>,
-        globalIdMap: Map<any, string>,
+    (function compileGroup(
+      group: Group,
 
-        // final url router
-        urlPrefix: string,
-        urlParams: string,
+      // parsed ids
+      idMap: Map<any, string>,
+      globalIdMap: Map<any, string>,
 
-        // parent access path
-        parentPath: string,
+      // url prefix
+      urlPrefix: string,
+      // url params, '' if not exists yet
+      urlParams: string,
 
-        // whether current scope needs async
-        isScopeAsync: boolean,
+      // parent access path
+      parentPath: string,
 
-        // function scope stuff
-        scopePrefix: string,
-        scopeSuffix: string,
+      // whether current scope needs async
+      isScopeAsync: boolean,
+
+      // function scope stuff
+      scopePrefix: string,
+      scopeSuffix: string,
+    ) {
+      for (
+        let i = 0, idMapNotCloned = true, globalIdMapNotCloned = true, hooks = group[0];
+        i < hooks.length;
+        i++
       ) {
-        for (
-          let i = 0, idMapNotCloned = true, globalIdMapNotCloned = true, hooks = group[0];
-          i < hooks.length;
-          i++
-        ) {
-          const hook = hooks[i],
-            hookId = hook[0];
+        const hook = hooks[i],
+          hookId = hook[0];
 
-          // parse result to an id
-          if (hookId & 1) {
-            const hookTargetId = hook[1];
-            if (idMapNotCloned) {
-              idMap = new Map(idMap);
-              idMapNotCloned = false;
-            }
+        // parse result to an id
+        if (hookId & 1) {
+          const hookTargetId = hook[1];
+          if (idMapNotCloned) {
+            idMap = new Map(idMap);
+            idMapNotCloned = false;
+          }
 
-            if (hookId < 7) {
-              let parsedId = 'k' + keyAvailableId++,
-                callId = 'm' + hookAvailableId++,
-                // call hook
-                call = callId + `(${get_args(hook, 3, idMap, urlParams)});`;
-              globalDecls += `,${callId}=${parentPath}[0][${i}][2]`;
-              if (is_async_fn(hook[2])) {
-                isScopeAsync = true;
-                call = 'await ' + call;
-              }
-
-              idMap.set(hookTargetId, parsedId);
-
-              // parse()
-              if (hookId === 1) scopePrefix += `let ${parsedId}=`;
-              // resource()
-              else if (hookId === 3) scopePrefix += `using ${parsedId}=`;
-              // async_resource()
-              else {
-                scopePrefix += `await using ${parsedId}=`;
-                isScopeAsync = true;
-              }
-
-              scopePrefix += call;
-            } else {
-              if (globalIdMapNotCloned) {
-                globalIdMap = new Map(globalIdMap);
-                globalIdMapNotCloned = false;
-              }
-
-              const parsedId = 'd' + globalAvailableId++;
-              idMap.set(hookTargetId, parsedId);
-              globalIdMap.set(hookTargetId, parsedId);
-
-              // use()
-              if (hookId === 7) globalDecls += `,${parsedId}=${parentPath}[0][${i}][2]`;
-              // build()
-              else {
-                let call = parentPath + `[0][${i}][2](${get_args(hook, 3, globalIdMap, '')})`;
-                if (is_async_fn(hook[2])) call = 'await ' + call;
-
-                globalDecls += `,${parsedId}=` + call;
-              }
-            }
-          } else {
-            let callId = 'm' + hookAvailableId++,
-              requires = get_args(hook, 2, idMap, urlParams),
+          if (hookId < 7) {
+            let parsedId = 'k' + keyAvailableId++,
+              callId = 'm' + hookAvailableId++,
               // call hook
-              call =
-                callId +
-                (hookId === 6
-                  ? requires.length === 0
-                    ? '(e)'
-                    : `(e,${requires});`
-                  : `(${requires});`);
-            globalDecls += `,${callId}=${parentPath}[0][${i}][1]`;
-            if (is_async_fn(hook[1])) {
+              call = callId + `(${get_args(hook, 3, idMap, urlParams)});`;
+            globalDecls += `,${callId}=${parentPath}[0][${i}][2]`;
+            if (is_async_fn(hook[2])) {
               isScopeAsync = true;
               call = 'await ' + call;
             }
 
-            // run()
-            if (hookId === 2) scopePrefix += call;
-            // defer()
-            else if (hookId === 4) {
-              scopePrefix += 'try{';
-              scopeSuffix = `}finally{${call}}` + scopeSuffix;
-            }
-            // error()
+            idMap.set(hookTargetId, parsedId);
+
+            // parse()
+            if (hookId === 1) scopePrefix += `let ${parsedId}=`;
+            // resource()
+            else if (hookId === 3) scopePrefix += `using ${parsedId}=`;
+            // async_resource()
             else {
-              scopePrefix += 'try{';
-              scopeSuffix = `}catch(e){return ${call}}`;
+              scopePrefix += `await using ${parsedId}=`;
+              isScopeAsync = true;
+            }
+
+            scopePrefix += call;
+          } else {
+            // also add to global dependencies
+            if (globalIdMapNotCloned) {
+              globalIdMap = new Map(globalIdMap);
+              globalIdMapNotCloned = false;
+            }
+
+            const parsedId = 'd' + globalAvailableId++;
+            idMap.set(hookTargetId, parsedId);
+            globalIdMap.set(hookTargetId, parsedId);
+
+            // use()
+            if (hookId === 7) globalDecls += `,${parsedId}=${parentPath}[0][${i}][2]`;
+            // build()
+            else {
+              let call =
+                parentPath + `[0][${i}][2](${get_args(hook, 3, globalIdMap, DEFAULT_PARAMS)})`;
+              if (is_async_fn(hook[2])) call = 'await ' + call;
+
+              globalDecls += `,${parsedId}=` + call;
             }
           }
-        }
-
-        let startIdx = 1;
-
-        // has subroutes
-        if (!Array.isArray(group[1])) {
-          const subroutes = group[1];
-          for (const subrouteKey in subroutes) {
-            const subrouteId = 's' + subrouteAvailableId++;
-            globalDecls += `,${subrouteId}=${parentPath}[1]["${subrouteKey}"]`;
-
-            compileGroup(
-              subroutes[subrouteKey as keyof typeof subroutes],
-              idMap,
-              globalIdMap,
-              concat_prefix(urlPrefix, subrouteKey),
-              urlParams.length > 0 || is_dynamic_pattern(subrouteKey) ? globalUrlParams : '',
-              subrouteId,
-              isScopeAsync,
-              scopePrefix,
-              scopeSuffix,
-            );
+        } else {
+          let callId = 'm' + hookAvailableId++,
+            requires = get_args(hook, 2, idMap, urlParams),
+            // call hook
+            call =
+              callId +
+              (hookId === 6
+                ? requires.length === 0
+                  ? '(e)'
+                  : `(e,${requires});`
+                : `(${requires});`);
+          globalDecls += `,${callId}=${parentPath}[0][${i}][1]`;
+          if (is_async_fn(hook[1])) {
+            isScopeAsync = true;
+            call = 'await ' + call;
           }
 
-          startIdx = 2;
+          // run()
+          if (hookId === 2) scopePrefix += call;
+          // defer()
+          else if (hookId === 4) {
+            scopePrefix += 'try{';
+            scopeSuffix = `}finally{${call}}` + scopeSuffix;
+          }
+          // error()
+          else {
+            scopePrefix += 'try{';
+            scopeSuffix = `}catch(e){return ${call}}`;
+          }
+        }
+      }
+
+      let startIdx = 1;
+
+      // has subroutes
+      if (!Array.isArray(group[1])) {
+        const subroutes = group[1];
+        for (const subrouteKey in subroutes) {
+          const subrouteId = 's' + subrouteAvailableId++;
+          globalDecls += `,${subrouteId}=${parentPath}[1]["${subrouteKey}"]`;
+
+          compileGroup(
+            subroutes[subrouteKey as keyof typeof subroutes],
+            idMap,
+            globalIdMap,
+            concat_prefix(urlPrefix, subrouteKey),
+            getUrlParams(urlParams, subrouteKey),
+            subrouteId,
+            isScopeAsync,
+            scopePrefix,
+            scopeSuffix,
+          );
         }
 
-        while (startIdx < group.length) {
-          let handler = group[startIdx] as Handler,
-            routeMethod = handler[0],
-            routePath = handler[1],
-            fn = handler[2],
-            // route-specific state
-            routeUrlParams =
-              urlParams.length > 0 || is_dynamic_pattern(routePath) ? globalUrlParams : '',
-            isRouteScopeAsync = isScopeAsync,
-            // route handler id
-            args = get_args(handler, 3, idMap, routeUrlParams),
-            callId = 'h' + handleAvailableId++;
+        startIdx = 2;
+      }
 
-          // add url params
-          if (fn.length > handler.length - 3) {
-            if (handler.length > 3) args += ',';
-            args += get_arg(params, idMap, routeUrlParams);
-          }
+      while (startIdx < group.length) {
+        let handler = group[startIdx] as Handler,
+          routeMethod = handler[0],
+          routePath = handler[1],
+          fn = handler[2],
+          // route-specific state
+          routeUrlParams = getUrlParams(urlParams, routePath),
+          isRouteScopeAsync = isScopeAsync,
+          // route handler id
+          args = get_args(handler, 3, idMap, routeUrlParams),
+          callId = 'h' + handleAvailableId++;
 
-          // call route handler
-          let store = callId + `(${args})`;
-          globalDecls += `,${callId}=${parentPath}[${startIdx}][2]`;
-          if (is_async_fn(fn)) {
-            store = 'await ' + store;
-            isRouteScopeAsync = true;
-          }
-
-          // Return empty body if request matches HEAD
-          if (routeMethod === 'GET') store = `o(h,${store})`;
-
-          // wrap in async iife if necessary
-          store = scopePrefix + `return ${store};` + scopeSuffix;
-          if (isRouteScopeAsync) store = `return(async()=>{${store}})();`;
-
-          // add to router
-          routeUrlParams.length === 0
-            ? router_set_static(urlRouter, routeMethod, concat_prefix(urlPrefix, routePath), store)
-            : router_set_dynamic(
-                urlRouter,
-                routeMethod,
-                concat_prefix(urlPrefix, routePath),
-                store,
-              );
-
-          startIdx++;
+        // add url params
+        if (fn.length > handler.length - 3) {
+          if (handler.length > 3) args += ',';
+          args += routeUrlParams;
         }
-      })(group, idMap, globalIdMap, '/', '', parentPath, false, '', ''),
-      globalDecls
-    );
+
+        // call route handler
+        let store = callId + `(${args})`;
+        globalDecls += `,${callId}=${parentPath}[${startIdx}][2]`;
+        if (is_async_fn(fn)) {
+          store = 'await ' + store;
+          isRouteScopeAsync = true;
+        }
+
+        // Return empty body if request matches HEAD
+        if (routeMethod === 'GET') store = `o(h,${store})`;
+
+        // wrap in async iife if necessary
+        store = scopePrefix + `return ${store};` + scopeSuffix;
+        if (isRouteScopeAsync) store = `return(async()=>{${store}})();`;
+
+        // add to router
+        routeUrlParams === DEFAULT_PARAMS
+          ? router_set_static(urlRouter, routeMethod, concat_prefix(urlPrefix, routePath), store)
+          : router_set_dynamic(urlRouter, routeMethod, concat_prefix(urlPrefix, routePath), store);
+
+        startIdx++;
+      }
+    })(group, idMap, globalIdMap, '/', DEFAULT_PARAMS, parentPath, false, '', '');
+
+    return globalDecls;
+  };
