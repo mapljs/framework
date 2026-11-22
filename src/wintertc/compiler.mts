@@ -1,5 +1,10 @@
 import { is_dynamic_pattern } from '@mapl/pattern-router/tree/utils';
-import { router_set_dynamic, router_set_static, type Router } from '@mapl/pattern-router';
+import {
+  router_init,
+  router_set_dynamic,
+  router_set_static,
+  type Router,
+} from '@mapl/pattern-router';
 
 import type { Group, Handler } from '../core/route.mts';
 import { router_compile_to_code } from '@mapl/pattern-router/jit';
@@ -228,4 +233,17 @@ export const AsyncFunction: {
     return globalDecls;
   },
   compile_fn_body = (urlRouter: Router<string>) =>
-    `{let h=false,c={status:200,headers:new Headers(),statusText:''},u=r.url,s=u.indexOf('/',9),e=u.indexOf('?',s+1),p=e===-1?u.slice(s):u.slice(e);${router_compile_to_code(urlRouter, 'm', 'p', 'r.method', 'h=true')}return new Response(null,{status:404})}`;
+    `{let h=false,c={status:200,headers:new Headers(),statusText:''},u=r.url,s=u.indexOf('/',9),e=u.indexOf('?',s+1),p=e===-1?u.slice(s):u.slice(e);${router_compile_to_code(urlRouter, 'm', 'p', 'r.method', 'h=true')}return new Response(null,{status:404})}`,
+  /**
+   * @example
+   * compile_lazy_fn(group, 'self', new Map(), '(r,v,x)');
+   */
+  compile_lazy_fn = (group: Group, parentPath: string, idMap: Map<any, string>, args: string) => {
+    const urlRouter = router_init<string>();
+    return `return function${args}{${compile_group(
+      group,
+      urlRouter,
+      parentPath,
+      idMap,
+    )};return(this.fetch=${args}=>${compile_fn_body(urlRouter)})${args}}`;
+  };

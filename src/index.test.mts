@@ -31,7 +31,7 @@ const router = route.group(
 );
 
 const o = {
-  fetch: await compile(router),
+  fetch: compile(router),
 };
 console.log(o.fetch.toString());
 

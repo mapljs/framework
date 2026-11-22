@@ -1,8 +1,7 @@
 import type { ExecutionContext, Request as WorkerRequest } from '@cloudflare/workers-types';
-import { router_init } from '@mapl/pattern-router';
 
 import type { Group } from './core/route.mts';
-import { compile_group, compile_fn_body } from './wintertc/compiler.mts';
+import { compile_lazy_fn } from './wintertc/compiler.mts';
 import {
   context,
   params,
@@ -18,11 +17,9 @@ export * as ids from './cloudflare/ids.mts';
 /**
  * Compile a group to string.
  */
-export const compile_to_string = (group: Group, parentPath: string): string => {
-    const urlRouter = router_init<string>();
-    return `return function(r,v,x){${compile_group(
+export const compile_to_string = (group: Group, parentPath: string): string =>
+    compile_lazy_fn(
       group,
-      urlRouter,
       parentPath,
       new Map([
         [request, 'r'],
@@ -34,8 +31,8 @@ export const compile_to_string = (group: Group, parentPath: string): string => {
         [worker_env, 'v'],
         [execution_context, 'x'],
       ]),
-    )};return(this.fetch=(r,v,x)=>${compile_fn_body(urlRouter)})(r,v,x)}`;
-  },
+      '(r,v,x)',
+    ),
   /**
    * Compile a group to a handler function, the setup phase is run on first request.
    */
