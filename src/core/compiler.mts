@@ -22,13 +22,13 @@ export const params: Id<Record<string, string | undefined>> = 'core:params' as a
   },
   get_arg = (argName: unknown, idMap: Map<unknown, string>, isDynamicRoute: boolean): string => {
     if (argName === params) {
-      if (isDynamicRoute) return 'm.groups';
+      if (isDynamicRoute) return idMap.get(params)!;
       throw new Error(`static routes cannot access path parameters!`);
-    } else {
-      let str = idMap.get(argName);
-      if (str == null) throw new Error(`id ${argName} is not parsed!`);
-      return str;
     }
+
+    const str = idMap.get(argName);
+    if (str == null) throw new Error(`id ${argName} is not parsed!`);
+    return str;
   },
   get_args = (
     arr: unknown[],
@@ -45,7 +45,6 @@ export const params: Id<Record<string, string | undefined>> = 'core:params' as a
    * Compile a group, returns required global declarations and add all routes to `urlRouter`.
    *
    * Required declarations:
-   * - `m.groups`: Matched RegExp params.
    * - `h`: Whether a request method is `HEAD`.
    * - `o(h,r)`: Cancel the response body.
    *
@@ -62,7 +61,8 @@ export const params: Id<Record<string, string | undefined>> = 'core:params' as a
    *   router,
    *   'self',
    *   new Map([
-   *     [ids.request, 'r']
+   *     [ids.request, 'r'],
+   *     [ids.params, 'm.groups']
    *   ]),
    *   'let o=(h,r)=>h?new Response(null,r):r'
    * );
