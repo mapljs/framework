@@ -9,4 +9,4 @@ declare global {
 export * from '../wintertc/ids.mts';
 export const worker_request: Id<WorkerRequest> = 'cloudflare:request' as any,
   worker_env: Id<Env> = 'cloudflare:env' as any,
-  execution_context: Id<ExecutionContext> = 'cloudflare:ctx' as any;
+  worker_ctx: Id<ExecutionContext> = 'cloudflare:ctx' as any;

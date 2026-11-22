@@ -1,6 +1,6 @@
 import type { Group } from './core/route.mts';
 import { compile_lazy_fn } from './wintertc/compiler.mts';
-import { context, params, query, request } from './wintertc/ids.mts';
+import { context, query, request } from './wintertc/ids.mts';
 
 export * as ids from './wintertc/ids.mts';
 
@@ -14,9 +14,9 @@ export const compile_to_string = (group: Group, parentPath: string): string =>
       new Map<any, string>([
         [request, 'r'],
         [query, 'e===-1?"":u.slice(e)'],
-        [params, 'm.groups'],
         [context, 'c'],
       ]),
+      new Map(),
       '(r)',
     ),
   /**

@@ -8,8 +8,7 @@ import {
   request,
   worker_request,
   worker_env,
-  execution_context,
-  params,
+  worker_ctx,
 } from './cloudflare/ids.mts';
 
 export * as ids from './cloudflare/ids.mts';
@@ -24,12 +23,15 @@ export const compile_to_string = (group: Group, parentPath: string): string =>
       new Map([
         [request, 'r'],
         [query, 'e===-1?"":u.slice(e)'],
-        [params, 'm.groups'],
         [context, 'c'],
 
         [worker_request, 'r'],
         [worker_env, 'v'],
-        [execution_context, 'x'],
+        [worker_ctx, 'x'],
+      ]),
+      new Map([
+        [worker_env, 'v'],
+        [worker_ctx, 'x'],
       ]),
       '(r,v,x)',
     ),

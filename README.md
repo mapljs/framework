@@ -33,11 +33,9 @@ import { compile, compile_to_string, ids } from '@mapl/framework/cloudflare';
 
 ids.worker_request; // a WorkerRequest
 ids.worker_env; // your cloudflare Env, can be used in build() hook
-ids.execution_context; // a request ExecutionContext, can be used in build() hook
+ids.worker_ctx; // a request ExecutionContext, can be used in build() hook
 
 export default {
-  // Requires the function to be set as the 'fetch' property of an object.
-  // The setup phases will execute on the first request.
   fetch: compile(router)
 }
 
