@@ -1,10 +1,10 @@
 {
   "type": "module",
   "version": "0.0.1",
-  "description": "",
+  "description": "A fast, simple cross-runtime framework.",
   "keywords": [],
   "homepage": "",
-  "repository": "",
+  "repository": "mapljs/framework",
   "exports": {
     ".": "./index.mjs",
     "./*": "./*.mjs"
