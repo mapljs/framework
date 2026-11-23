@@ -30,8 +30,9 @@ const router = route.group(
   route.get('/*', (req) => new Response(req.url), ids.request),
 );
 
+const build = compile(router);
 const o = {
-  fetch: compile(router),
+  fetch: build(router),
 };
 console.log(o.fetch.toString());
 

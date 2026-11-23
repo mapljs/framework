@@ -15,8 +15,9 @@ const router = route.group(
   route.get('/:id', (params) => new Response(params.id)),
 );
 
+const build = compile(router);
 export default {
-  fetch: compile(router),
+  fetch: build(router),
 };
 ```
 
@@ -35,8 +36,9 @@ ids.worker_request; // a WorkerRequest
 ids.worker_env; // your cloudflare Env, can be used in build() hook
 ids.worker_ctx; // a request ExecutionContext, can be used in build() hook
 
+const build = compile(router);
 export default {
-  fetch: compile(router)
+  fetch: build(router)
 }
 
 // inspect compiled handler

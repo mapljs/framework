@@ -40,9 +40,9 @@ export const compile_to_string = (group: Group, parentPath: string): string =>
    */
   compile = (
     group: Group,
-  ): ((
+  ): (group: Group) => ((
     this: { fetch: any },
     req: WorkerRequest,
     env: Env,
     ctx: ExecutionContext,
-  ) => Response | Promise<Response>) => Function('g', compile_to_string(group, 'g'))(group);
+  ) => Response | Promise<Response>) => Function('g', compile_to_string(group, 'g')) as any;
