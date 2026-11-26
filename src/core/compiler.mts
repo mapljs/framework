@@ -64,7 +64,7 @@ export const DEFAULT_PARAMS = 'Object.create(null)',
    *   'let o=(h,r)=>h?new Response(null,r):r'
    * );
    */
-  compile_group = (
+  compile_group_decls = (
     group: Group,
     urlRouter: Router<string>,
     parentPath: string,

@@ -1,10 +1,10 @@
 {
   "lockfileVersion": 1,
   "root": {
-    "version": "0.0.1",
+    "version": "2.0.1",
     "specs": {
       "dependencies": {
-        "@mapl/pattern-router": "^0.1.3"
+        "@mapl/pattern-router": "0.2.0"
       },
       "devDependencies": {
         "@cloudflare/workers-types": "^5.20261120.1",
@@ -19,7 +19,7 @@
     "dependencies": {
       "@cloudflare/workers-types": "5.20261120.1",
       "@mapl/framework": "link:dist",
-      "@mapl/pattern-router": "0.1.3",
+      "@mapl/pattern-router": "0.2.0",
       "@types/node": "26.6.6",
       "oxc-minify": "0.154.0",
       "oxc-transform": "0.154.0",
@@ -31,8 +31,8 @@
     "@cloudflare/workers-types@5.20261120.1": {
       "integrity": "sha512-bpaDXQ1oYqWhLCAqV5fO0pPB2tduDEEFyIMedZVi0NqzW/7T8DlJ8hUe3DqoDG1RQ8X7zTbK555Qr9yAyyUhmQ=="
     },
-    "@mapl/pattern-router@0.1.3": {
-      "integrity": "sha512-SvxEwiY6B+pketz0o9tgwjzHSFFmneVNs4X38DTmW/yMcWbdHduhtuqY3aBjOYyt36g+5azeHv0gm+CCaX847g=="
+    "@mapl/pattern-router@0.2.0": {
+      "integrity": "sha512-YtXUFxCIhqYNHbDrEMRuPa/vbZbV9KvTQnb3BRNkhRluiLlUU4sLe1yfZ2s3TGBz8F4X8QiZzg4AwfZ84wC3FQ=="
     },
     "@oxc-minify/binding-android-arm-eabi@0.154.0": {
       "integrity": "sha512-BA6uu03j0va8yUa90e13Xr5fLHMfDwTDGOV3MarHMAoE22k2v37bto2jG0TiEbvqSCFZ993kEix3j2BvVOJ7ug==",

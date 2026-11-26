@@ -40,7 +40,9 @@ export const compile_to_string = (group: Group, parentPath: string): string =>
    */
   compile = (
     group: Group,
-  ): (group: Group) => ((
+  ): ((
+    group: Group,
+  ) => (
     this: { fetch: any },
     req: WorkerRequest,
     env: Env,

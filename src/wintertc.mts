@@ -24,5 +24,5 @@ export const compile_to_string = (group: Group, parentPath: string): string =>
    */
   compile = (
     group: Group,
-  ): (group: Group) => ((this: { fetch: any }, req: Request) => Response | Promise<Response>) =>
+  ): ((group: Group) => (this: { fetch: any }, req: Request) => Response | Promise<Response>) =>
     Function('g', compile_to_string(group, 'g')) as any;
