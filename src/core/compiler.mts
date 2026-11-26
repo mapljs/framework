@@ -46,7 +46,7 @@ export const DEFAULT_PARAMS = 'Object.create(null)',
    * @param globalDecls Initial global declarations
    * @param globalAvailableId `d${i}`
    * @param keyAvailableId `k${i}`
-   * @param hookAvailableId `m${i}`
+   * @param hookAvailableId `c${i}`
    * @param subrouteAvailableId `s${i}`
    * @param handleAvailableId `h${i}`
    *
@@ -127,7 +127,7 @@ export const DEFAULT_PARAMS = 'Object.create(null)',
 
           if (hookId < 7) {
             let parsedId = 'k' + keyAvailableId++,
-              callId = 'm' + hookAvailableId++,
+              callId = 'c' + hookAvailableId++,
               // call hook
               call = callId + `(${get_args(hook, 3, idMap, urlParams)});`;
             globalDecls += `,${callId}=${parentPath}[0][${i}][2]`;
@@ -172,7 +172,7 @@ export const DEFAULT_PARAMS = 'Object.create(null)',
             }
           }
         } else {
-          let callId = 'm' + hookAvailableId++,
+          let callId = 'c' + hookAvailableId++,
             requires = get_args(hook, 2, idMap, urlParams),
             // call hook
             call =
