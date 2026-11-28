@@ -1,5 +1,7 @@
 import { hook, route } from './index.mts';
-import { compile, ids } from './wintertc.mts';
+
+import * as wintertc from './wintertc.mts';
+import * as cf from './cloudflare.mts';
 
 const org = hook.id<string>();
 
@@ -20,17 +22,17 @@ const router = route.group(
             if (org !== 'mapl') throw new Error('invalid org');
             return org;
           },
-          ids.params,
+          wintertc.params,
         ),
       ],
       route.get('/:id+', (org, params) => new Response(`package: @${org}/${params.id}`), org),
     ),
   },
   route.get('/:id', (params) => new Response(params.id)),
-  route.get('/*', (req) => new Response(req.url), ids.request),
+  route.get('/*', (req) => new Response(req.url), wintertc.request),
 );
 
-const build = compile(router);
+const build = cf.compile(router);
 const o = {
   fetch: build(router),
 };

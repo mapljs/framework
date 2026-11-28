@@ -1,17 +1,20 @@
 import type { ExecutionContext, Request as WorkerRequest } from '@cloudflare/workers-types';
 
+import type { Id } from './core/hook.mts';
 import type { Group } from './core/route.mts';
 import { compile_lazy_fn } from './wintertc/compiler.mts';
-import {
-  context,
-  query,
-  request,
-  worker_request,
-  worker_env,
-  worker_ctx,
-} from './cloudflare/ids.mts';
 
-export * as ids from './cloudflare/ids.mts';
+import { context, query, request } from './wintertc/ids.mts';
+
+// auto-merge with other Env declarations
+declare global {
+  interface Env {}
+}
+
+export const env: Id<Env> = 'cloudflare:env' as any,
+  ctx: Id<ExecutionContext> = 'cloudflare:ctx' as any;
+
+export * as ws from './cloudflare/ws.mts';
 
 /**
  * Compile a group to string.
@@ -25,13 +28,12 @@ export const compile_to_string = (group: Group, parentPath: string): string =>
         [query, 'e===-1?"":u.slice(e)'],
         [context, 'c'],
 
-        [worker_request, 'r'],
-        [worker_env, 'v'],
-        [worker_ctx, 'x'],
+        [env, 'v'],
+        [ctx, 'x'],
       ]),
       new Map([
-        [worker_env, 'v'],
-        [worker_ctx, 'x'],
+        [env, 'v'],
+        [ctx, 'x'],
       ]),
       '(r,v,x)',
     ),

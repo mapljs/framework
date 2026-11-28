@@ -32,7 +32,6 @@ const str = compile_to_string(router, 'self');
 ```mts
 import { compile, compile_to_string, ids } from '@mapl/framework/cloudflare';
 
-ids.worker_request; // a WorkerRequest
 ids.worker_env; // your cloudflare Env, can be used in build() hook
 ids.worker_ctx; // a request ExecutionContext, can be used in build() hook
 

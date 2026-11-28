@@ -2,7 +2,9 @@ import type { Group } from './core/route.mts';
 import { compile_lazy_fn } from './wintertc/compiler.mts';
 import { context, query, request } from './wintertc/ids.mts';
 
-export * as ids from './wintertc/ids.mts';
+export * from './wintertc/ids.mts';
+export * as response from './wintertc/response.mts';
+export * as cors from './wintertc/cors.mts';
 
 /**
  * Compile a group to string.
