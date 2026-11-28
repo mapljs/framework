@@ -1,9 +1,18 @@
 import { hook, route } from './index.mts';
 
-import * as wintertc from './wintertc.mts';
-import * as cf from './cloudflare.mts';
+import { ws, compile } from './cloudflare.mts';
+import { context, request } from './wintertc.mts';
 
-const org = hook.id<string>();
+const ping = ws.handler({
+  onmessage(msg) {
+    if (msg.data !== 'ping') {
+      this.close();
+      return;
+    }
+
+    this.send('pong');
+  }
+});
 
 const router = route.group(
   [
@@ -12,27 +21,17 @@ const router = route.group(
       return new Response('error', { status: 500 });
     }),
   ],
-  {
-    '/@:org': route.group(
-      [
-        hook.parse(
-          org,
-          (params) => {
-            const org = params.org!;
-            if (org !== 'mapl') throw new Error('invalid org');
-            return org;
-          },
-          wintertc.params,
-        ),
-      ],
-      route.get('/:id+', (org, params) => new Response(`package: @${org}/${params.id}`), org),
-    ),
-  },
   route.get('/:id', (params) => new Response(params.id)),
-  route.get('/*', (req) => new Response(req.url), wintertc.request),
+  route.get('/ws', (req, c) => {
+    if (ws.upgrade(req))
+      return ws.route(ping);
+
+    c.status = 426;
+    return new Response('WebSocket upgrade required', c);
+  }, request, context)
 );
 
-const build = cf.compile(router);
+const build = compile(router);
 const o = {
   fetch: build(router),
 };

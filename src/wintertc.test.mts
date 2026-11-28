@@ -1,5 +1,5 @@
 import { hook, route } from './index.mts';
-import * as wintertc from './wintertc.mts';
+import { compile, params, request } from './wintertc.mts';
 
 const org = hook.id<string>();
 
@@ -20,17 +20,17 @@ const router = route.group(
             if (org !== 'mapl') throw new Error('invalid org');
             return org;
           },
-          wintertc.params,
+          params,
         ),
       ],
       route.get('/:id+', (org, params) => new Response(`package: @${org}/${params.id}`), org),
     ),
   },
   route.get('/:id', (params) => new Response(params.id)),
-  route.get('/*', (req) => new Response(req.url), wintertc.request),
+  route.get('/*', (req) => new Response(req.url), request),
 );
 
-const build = wintertc.compile(router);
+const build = compile(router);
 const o = {
   fetch: build(router),
 };

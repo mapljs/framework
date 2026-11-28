@@ -1,6 +1,8 @@
 export const upgrade = (request: Request): boolean => request.headers.get('upgrade') === 'websocket';
 
-export type EventHandlers = Extract<WebSocket, 'onopen' | 'onmessage' | 'onerror' | 'onclose'>;
+export type EventHandlers = {
+  [K in 'onopen' | 'onmessage' | 'onerror' | 'onclose']?: WebSocket[K] & {}
+};
 
 /**
  * Create a websocket handler.
